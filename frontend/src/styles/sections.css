@@ -1,0 +1,90 @@
+.control{
+   
+   
+
+}
+.herosection{
+   /* border: 1px solid black;*/
+    height: 500px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content:center ;
+    align-items: center;
+    gap:20px;
+   
+}
+.headline{
+    display: flex;
+    flex-direction: column;
+    gap:20px;
+    font-family: serif;
+}
+/*
+.featuresection{
+     background-color: rgb(196, 225, 230);
+}*/
+.aobutsection {
+  min-height: 400px; /* Use min-height instead of fixed height */
+  width: 100%;
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.textSection {
+  width: 60%;
+  text-align: center; /* Center text */
+}
+
+.textSection h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.textSection p {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* ✅ Responsive Design: Tablets and Mobile */
+@media (max-width: 1024px) {
+  .textSection {
+    width: 80%;
+  }
+}
+
+@media (max-width: 768px) {
+  .aobutsection {
+    flex-direction: column; /* Stack content vertically if needed */
+    text-align: center;
+    padding: 15px;
+  }
+
+  .textSection {
+    width: 100%;
+  }
+
+  .textSection h2 {
+    font-size: 1.6rem;
+  }
+
+  .textSection p {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .textSection h2 {
+    font-size: 1.4rem;
+  }
+
+  .textSection p {
+    font-size: 0.9rem;
+  }
+}
