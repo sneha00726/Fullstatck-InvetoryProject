@@ -91,7 +91,7 @@ exports.searchProdByName=(name) =>{
     return new Promise((resolve, reject)=> 
     {
         // Parameterized query using the LIKE operator
-        db.query("select *from product where pname like '%"+name+"%'",(err, result)=>{
+       db.query("SELECT * FROM product WHERE pname LIKE '%"+name+"%' ",(err, result)=>{
             if(err) 
             {
                 reject(err); 

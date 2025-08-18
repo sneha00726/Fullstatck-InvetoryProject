@@ -1,27 +1,53 @@
 .Login{
-    border: 1px solid black;
-    width: 100%;
-    height: 500px;
+    border: 1px solid #ccc;        /* softer border */
+    width: 400px;                  /* fixed card width */
+    height: auto;                  /* adjust height based on content */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 10px;
+    padding: 30px;
     gap: 20px;
+    margin: 50px auto;             /* center horizontally */
+    border-radius: 12px;           /* rounded corners */
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1); /* subtle shadow */
+    background-color: #fff;
 
 }
 .control{
-    width: 400px;
+    width: 100%;                   /* take full width inside card */
     display: flex;
-    gap:20px;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;        /* label on top of input */
+    gap: 8px; 
+}
+.control input {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 100%;
+    outline: none;
 }
 
+.control input:focus {
+    border-color: #007bff;        /* highlight input on focus */
+}
+
+/* Heading */
+.head {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.head h2 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}/*
 .head{
     height: 50px;
     width: 100%;
     text-align: center;
     padding: 20px;
     margin: 20px;
-}
+}*/

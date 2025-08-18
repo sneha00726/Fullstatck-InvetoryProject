@@ -8,14 +8,14 @@ export default class ReviewSection  extends React.Component{
     {
         return <>
        
-       <div className="container my-5">
+       <div className="container my-5 ">
   <h2 className="text-center mb-4">What Our Users Say</h2>
   <div className="row text-center">
 
     {/* Testimonial 1 */}
     <div className="col-md-4">
       <div className="card p-4 shadow-sm">
-        <i className="bi bi-chat-quote-fill display-4 text-primary mb-3"></i>
+        <i className="bi  display-4 text-primary mb-3"></i>
         <p>
           "This system has made managing our store so much easier.
           Real-time updates save us hours every week!"
@@ -28,7 +28,7 @@ export default class ReviewSection  extends React.Component{
     {/* Testimonial 2 */}
     <div className="col-md-4">
       <div className="card p-4 shadow-sm">
-        <i className="bi bi-hand-thumbs-up-fill display-4 text-success mb-3"></i>
+        <i className="bi display-4 text-success mb-3"></i>
         <p>
           "The role-based access keeps our data secure, and the
           interface is very user-friendly."
@@ -41,7 +41,7 @@ export default class ReviewSection  extends React.Component{
     {/* Testimonial 3 */}
     <div className="col-md-4">
       <div className="card p-4 shadow-sm">
-        <i className="bi bi-star-fill display-4 text-warning mb-3"></i>
+        <i className="bi display-4 text-warning mb-3"></i>
         <p>
           "Detailed reports help us make better business decisions.
           Totally worth it!"

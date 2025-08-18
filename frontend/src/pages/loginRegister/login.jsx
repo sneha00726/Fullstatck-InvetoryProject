@@ -1,6 +1,8 @@
 import React from "react";
 import "../../styles/loginsignup.css";
 import SignUp from "./signUp";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 export default class LoginPage extends React.Component {
     constructor()
     {
@@ -11,6 +13,7 @@ export default class LoginPage extends React.Component {
         }
 
     }
+   
 render()
 {
     return<>
@@ -29,9 +32,12 @@ render()
          onChange={(e)=>{this.setState({password:e.target.value})}}/>
         </div>
         
-        <div className="form-group control">
-            <input class="btn btn-primary" type="submit" value="Login"></input>
-        </div>
+       <div className="d-flex justify-content-center align-items-center gap-3">
+                
+                <Link to="/dashboard" className="btn btn-primary btn-sm">
+                  login
+                </Link>
+              </div>
         <div className="form-group control">
             <a href="/signup">Sign up</a>
         </div>

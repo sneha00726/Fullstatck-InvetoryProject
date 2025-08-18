@@ -71,12 +71,3 @@ exports.validateSupplier=(name, email, phone, companyname, address, gstnumber)=>
   return errors;
 };
 
-exports.validateId=(id)=>
-{
-    if(!id || id.trim() === "" || isNaN(id))
-    {
-        let error={message: "Valid Id is required"};
-        return error;
-    }
-    return null;
-};

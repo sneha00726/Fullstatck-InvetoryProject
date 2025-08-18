@@ -6,19 +6,21 @@ exports.addProduct=(req,res)=>
     let errors=validateProduct(pname,price,supplier_id,cid,stock);
     if (errors.length>0)
     {
-        return res.status(400).json({errors});
+        return res.status(422).json({
+            errorMsg:"validation error",
+            message:"product name should not blank"
+        });
     }
     let promise=pmodel.saveProduct(pname,price,supplier_id,cid,stock);
 
     promise.then((result)=>
     {
-        res.send("Product saved successfully...");
-        //console.log("Product saved successfully");
+        res.status(201).json({ message: "Product saved successfully" });
+       
         
     }).catch((err)=>
     {
-        res.send("Product not saved..."+err);
-        //console.log("Product not saved");
+        res.send("failed");
     });
 };
 
@@ -100,29 +102,28 @@ exports.deleteProdById=(req,res)=>
     {
         if(result.affectedRows === 0)
         {
-            res.send("Product not deleted");
+             res.status(404).json({'message':'Record not Deleted'});
             //console.log("Product not deleted");
         }
         else
         {
-            res.send("Product deleted successfully");
-            //console.log("Product deleted successfully");
+            res.status(200).json({'message':'Record Deleted'});
         }
     }).catch((err)=>
     {
-        res.send("Product not deleted"+err);
+       res.status(404).json({'message':'Record not Deleted'});
         //console.log("Product not deleted");
     });
 }
 
 exports.searchProdByName=(req,res)=>
 {
-    let name=req.query.pname;
+    let name=req.query.name;
     let promise=pmodel.searchProdByName(name);
 
     promise.then((result)=>
     {
-        res.send(result);
+        res.status(200).json(result);
         console.log("Searching for pname:", name); 
         console.log("Product found");
 

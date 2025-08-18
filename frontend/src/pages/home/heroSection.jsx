@@ -9,6 +9,7 @@ export default class HeroSection  extends React.Component{
     {
         return <>
        <div id="home" className="herosection">
+       
         <div className="headline"> 
             <h2>Inventory Management Made Effortless</h2>
             <p>
