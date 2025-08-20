@@ -3,13 +3,13 @@ let {validatePurchase}=require("../validation/purchasevalidation.js")
 
 exports.addPurchase=(req,res)=>
 {
-        let {invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, items}=req.body;
-        let errors=validatePurchase(invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, items);
+        let {invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items}=req.body;
+        let errors=validatePurchase(invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items);
         if(errors.length)
         {
             return res.status(400).json({errors});
         }
-        let promise=purmodel.addPurchase(invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, items);
+        let promise=purmodel.addPurchase(invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items);
         promise.then((result)=>
         {
             res.send("Purchase added successfully");

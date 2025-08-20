@@ -1,4 +1,4 @@
-exports.validatePurchase=(invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, items)=>
+exports.validatePurchase=(invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items)=>
 {
     let errors=[];
 
@@ -15,11 +15,6 @@ exports.validatePurchase=(invoiceno, purchasedate, supplierid, totalamount, paym
     if(!supplierid || supplierid === undefined || supplierid === null || isNaN(Number(supplierid))) 
     {
         errors.push("Supplier ID is required and must be a number.");
-    }
-
-    if(!totalamount || totalamount === undefined || isNaN(Number(totalamount))) 
-    {
-        errors.push("Total amount is required and must be a number.");
     }
 
     if(!paymentmode || !['cash', 'upi', 'card'].includes(paymentmode)) 

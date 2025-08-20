@@ -1,44 +1,69 @@
-let db = require("../../db.js");
+let db=require("../../db.js");
 
-exports.addPurchase=(invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, items)=>{
-    return new Promise((resolve, reject)=>{
+exports.addPurchase=(invoiceno,purchasedate,supplierid,paymentmode,gstinvoice,items)=>
+{
+    return new Promise((resolve,reject)=> 
+    {
+        if(!Array.isArray(items) || items.length === 0) 
+        {
+            return reject(new Error("No purchase items provided"));
+        }
 
-        db.beginTransaction((err)=>{
-            if(err)
+        let totalAmount = 0;
+
+        // Validate and calculate total
+        for(let item of items) 
+        {
+            if(
+                !item ||
+                typeof item.productid !== "number" ||
+                typeof item.price !== "number" ||
+                typeof item.quantity !== "number"
+            ) 
             {
-                return reject(err);
+                return reject(new Error("Each item must have valid productid, price, and quantity"));
             }
+            totalAmount=totalAmount+item.price * item.quantity;
+        }
+        db.beginTransaction((err)=>
+        {
+            if (err) return reject(err);
 
-            db.query("insert into purchase(invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice)values (?, ?, ?, ?, ?, ?)",[invoiceno, purchasedate, supplierid, totalamount,paymentmode,gstinvoice],(err1,result1)=>
-            {
-                if(err1) 
-                {
-                    return db.rollback(()=>reject(err1));
-                }
+            let purchaseSql=`
+                insert into purchase (invoiceno,purchasedate,supplierid,totalamount, paymentmode,gstinvoice)
+                values (?, ?, ?, ?, ?, ?)
+            `;
 
-                let purchaseId=result1.insertId;
+            db.query(
+                purchaseSql,
+                [invoiceno,purchasedate,supplierid,totalAmount,paymentmode,gstinvoice],
+                (err1,result1)=>{
+                    if (err1) return db.rollback(() => reject(err1));
 
-                let itemsSql=`insert into purchase_items(purchaseid, productid, quantity, price)
-                    values ?`;
+                    let purchaseId=result1.insertId;
+                    let itemsSql=`
+                        insert into purchase_items (purchaseid, productid, quantity, price)
+                        values ?
+                    `;
+                    let itemValues=items.map(item=>[purchaseId,item.productid,item.quantity, item.price]);
 
-                let itemValues=items.map(item=>[purchaseId,item.productid,item.quantity,item.price
-                ]);
-
-                db.query(itemsSql,[itemValues],(err2,result2)=>{
-                    if(err2) 
+                    db.query(itemsSql,[itemValues],(err2)=>
                     {
-                        return db.rollback(() => reject(err2));
-                    }
-                    db.commit((err3) => 
-                    {
-                        if (err3) 
+                        if (err2) return db.rollback(()=>reject(err2));
+
+                        db.commit((err3)=>
                         {
-                            return db.rollback(() => reject(err3));
-                        }
-                        resolve({result2});
+                            if (err3) return db.rollback(()=>reject(err3));
+
+                            resolve({
+                                message: "Purchase added successfully",
+                                purchaseId,
+                                totalAmount
+                            });
+                        });
                     });
-                });
-            });
+                }
+            );
         });
     });
 }
@@ -102,46 +127,80 @@ exports.updatePurchaseById=(id,purchaseData)=>
 {
     return new Promise((resolve,reject)=>
     {
-        let {invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, items}= purchaseData;
+        let {invoiceno,purchasedate,supplierid,paymentmode,gstinvoice,items}=purchaseData;
 
-        let sqlPurchase = `update purchase set
-                              invoiceno = ?, 
-                              purchasedate = ?, 
-                              supplierid = ?, 
-                              totalamount = ?, 
-                              paymentmode = ?, 
-                              gstinvoice = ?
-                              where id = ?`;
-
-        db.query(sqlPurchase, [invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, id],(err,result)=> 
+        if(!Array.isArray(items) || items.length === 0) 
         {
-            if (err) 
-                return reject(err);
+            return reject(new Error("No items provided for update"));
+        }
 
-            // Update each purchase item one by one
-            let updateItemPromises=items.map(item=> 
+        let totalAmount=0;
+
+        // Validate and calculate totalAmount
+        for(let item of items) 
+        {
+            if(
+                !item ||
+                typeof item.productid !== "number" ||
+                typeof item.quantity !== "number" ||
+                typeof item.price !== "number" ||
+                typeof item.id !== "number"
+            ) 
             {
-                return new Promise((res,rej)=> 
-                {
-                    let sqlUpdateItem= `update purchase_items 
-                                           set productid= ?, quantity= ?, price= ?
-                                           where id= ? and purchaseid= ?`;
-                    db.query(sqlUpdateItem, [item.productid, item.quantity, item.price, item.id, id],(err2)=> 
-                    {
-                        if(err2) 
-                        return rej(err2);
-                        res();
-                    });
-                });
-            });
+                return reject(new Error("Each item must have valid id, productid, quantity, and price"));
+            }
+            totalAmount=totalAmount+item.price*item.quantity;
+        }
 
-            //Wait for all item updates to finish
-            Promise.all(updateItemPromises)
-                .then(()=> resolve({message: "Purchase and items updated successfully." }))
-                .catch(err3=> reject(err3));
+        db.beginTransaction(err=>
+        {
+            if(err) return reject(err);
+
+            const sqlPurchase=`
+                update purchase 
+                set invoiceno=?, purchasedate=?, supplierid=?, totalamount=?, paymentmode=?, gstinvoice=?
+                where id=?
+            `;
+
+            db.query(
+                sqlPurchase,
+                [invoiceno,purchasedate,supplierid,totalAmount,paymentmode,gstinvoice,id],
+                (err1)=>
+                {
+                    if(err1) return db.rollback(()=>reject(err1));
+
+                    const updateItemPromises=items.map(item=> 
+                    {
+                        return new Promise((res,rej)=> 
+                        {
+                            const sqlUpdateItem=`
+                                update purchase_items 
+                                set productid = ?, quantity = ?, price = ? 
+                                where id = ? and purchaseid = ?
+                            `;
+                            db.query(sqlUpdateItem,[item.productid,item.quantity,item.price, item.id,id],(err2)=> 
+                            {
+                                if (err2) return rej(err2);
+                                res();
+                            });
+                        });
+                    });
+                    Promise.all(updateItemPromises)
+                        .then(()=>
+                        {
+                            db.commit((err3)=>
+                            {
+                                if (err3) return db.rollback(() => reject(err3));
+                                
+                                resolve({ message: "Purchase and items updated successfully", totalAmount });
+                            });
+                        })
+                        .catch(err4 => db.rollback(() => reject(err4)));
+                }
+            );
         });
     });
-}
+};
 
 exports.deletePurchaseById=(id)=>{
     return new Promise((resolve,reject)=>{
