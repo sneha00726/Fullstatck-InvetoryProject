@@ -116,20 +116,17 @@ exports.deleteProdById=(req,res)=>
     });
 }
 
-exports.searchProdByName=(req,res)=>
-{
-    let name=req.query.name;
-    let promise=pmodel.searchProdByName(name);
+exports.searchProdByName = (req, res) => {
+    let name = req.params.name; // ✅ get from route
+    let promise = pmodel.searchProdByName(name);
 
-    promise.then((result)=>
-    {
-        res.status(200).json(result);
-        console.log("Searching for pname:", name); 
-        console.log("Product found");
-
-    }).catch((err)=>
-    {
-        res.send("Data not found"+err);
-        //console.log("Data not found");
+    promise.then((result) => {
+        if (result.length > 0) {
+            res.status(200).json(result);
+        } else {
+            res.status(404).json({ message: "No products found" });
+        }
+    }).catch((err) => {
+        res.status(500).json({ error: err.message });
     });
-}
+};

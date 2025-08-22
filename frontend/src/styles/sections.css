@@ -12,6 +12,7 @@
   align-items:self-start;  /* vertically center text */
   justify-content: center; /* align text to left */
   padding-left: 50px;   /* push text away from edge */
+  flex-wrap: wrap;
   /*color: white;         /* make text visible */
 }
 
@@ -29,17 +30,16 @@
     gap:20px;
     font-family: serif;
 }
-/*
-.featuresection{
-     background-color: rgb(196, 225, 230);
-}*/
+
+
 .aobutsection {
   min-height: 400px; /* Use min-height instead of fixed height */
-  width: 100%;
+  min-width: 100%;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center; /* Center horizontally */
   align-items: center; /* Center vertically */
-    background-color:rgb(188, 204, 220);
+  background-color:rgb(188, 204, 220);
   padding: 20px;
   box-sizing: border-box;
 }
@@ -63,9 +63,10 @@
 
 /* ✅ Responsive Design: Tablets and Mobile */
 .featuresection{
-  background-color:rgb(217, 234, 253);
-  height: 300px;
-  width: 100%;
+  flex-wrap: wrap;
+  background-color:rgb(251, 251, 251);
+  min-height: 300px;
+  min-width: 100%;
   padding: 20px;
 }
 

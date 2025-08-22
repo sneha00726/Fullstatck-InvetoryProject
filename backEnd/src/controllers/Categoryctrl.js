@@ -104,3 +104,19 @@ exports.DeleteCategory=(req,res)=>
     {
         res.status(500).json({ message: "Failed to delete category"});    });
 }
+
+
+exports.searchCategory = (req, res) => {
+    let name = req.params.name; //
+    let promise = model_cat.categorysearch(name);
+
+    promise.then((result) => {
+        if (result.length > 0) {
+            res.status(200).json(result);
+        } else {
+            res.status(404).json({ message: "No category found" });
+        }
+    }).catch((err) => {
+        res.status(500).json({ error: err.message });
+    });
+};

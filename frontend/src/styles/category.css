@@ -1,0 +1,42 @@
+/* Container styling */
+.category {
+  max-width: 50%;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Input fields */
+.form-control {
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 15px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Input focus effect */
+
+/* Button styling */
+input[type="button"] {
+  background-color: #007bff;
+  color: white;
+  font-weight: 500;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+input[type="button"]:hover {
+  background-color: #0056b3;
+}
+
+/* Label message */
+label {
+  font-size: 14px;
+  font-weight: 500;
+  color: green;
+}

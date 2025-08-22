@@ -73,6 +73,19 @@ exports.deletePurchaseById=(req, res)=>{
         res.json({ error: "Error while deleting purchase" });
     });
 }
+exports.purchasesearch = (req, res) => {
+    let name = req.params.name; //
+    let promise = purmodel.searchpurchase(name);
 
+    promise.then((result) => {
+        if (result.length > 0) {
+            res.status(200).json(result);
+        } else {
+            res.status(404).json({ message: "No purchase found" });
+        }
+    }).catch((err) => {
+        res.status(500).json({ error: err.message });
+    });
+};
 
 

@@ -1,19 +1,31 @@
-
 import axios from 'axios';
-class CategoryService{
 
-    saveCategory(catdata){
-        let promise=axios.post("http://localhost:3000/api/categories/add",catdata);
-        return promise;
-    }
-     getCategory(){
-        let promise=axios.get("http://localhost:3000/api/categories/view");
-        return promise;
-    }
-    delCat(catId){
-        let promise=axios.delete(`http://localhost:3000/api/category/delete/${catId}`);
-        return promise;
-    }
-    
+const getToken = () => localStorage.getItem("token"); // JWT stored in localStorage
+
+class CategoryService {
+  getAuthHeaders() {
+    return { headers: { Authorization: `Bearer ${getToken()}` } };
+  }
+
+  saveCategory(catdata) {
+    return axios.post("http://localhost:3000/api/categories/add", catdata, this.getAuthHeaders());
+  }
+
+  getCategory() {
+    return axios.get("http://localhost:3000/api/categories/view", this.getAuthHeaders());
+  }
+
+  delCat(catId) {
+    return axios.delete(`http://localhost:3000/api/category/delete/${catId}`, this.getAuthHeaders());
+  }
+
+  searchCategory(name) {
+    return axios.get(`http://localhost:3000/api/category/search/${name}`, this.getAuthHeaders());
+  }
+
+  updateCategory(catId, catData) {
+    return axios.put(`http://localhost:3000/api/category/update/${catId}`, catData, this.getAuthHeaders());
+  }
 }
- export default new CategoryService();
+
+export default new CategoryService();

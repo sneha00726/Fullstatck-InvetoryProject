@@ -31,9 +31,9 @@ export default class ViewSupplier extends React.Component{
             </div>
           </div>
         </nav>
-        <div className="container p-5"> 
+        <div className="container p-5 table-responsive table-warning"> 
             <table className="table table-striped">
-                <thead>
+                <thead className="table-dark">
                     <tr>
                         <th>SRNO</th>
                         <th>name</th>
@@ -42,6 +42,8 @@ export default class ViewSupplier extends React.Component{
                         <th>Company_name</th>
                         <th>Address</th>   
                         <th>GstNumber</th>
+                        <th>DELETE</th>
+                        <th>UPDATE</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -55,8 +57,8 @@ export default class ViewSupplier extends React.Component{
                         <td>{sup.companyname}</td>
                         <td>{sup.address}</td>
                         <td>{sup.gstnumber}</td>
-                        <td><NavLink >DELETE</NavLink> </td>
-                        <td><NavLink>UPDATE</NavLink></td>
+                        <td><NavLink className={"btn btn-danger btn-sm"} >DELETE</NavLink> </td>
+                        <td><NavLink className={"btn btn-success btn-sm"} >UPDATE</NavLink></td>
                             </tr>))
                     }
                     <tr></tr>

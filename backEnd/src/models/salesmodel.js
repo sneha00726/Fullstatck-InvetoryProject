@@ -3,65 +3,78 @@ let db=require("../../db.js");
 
 
 exports.createSale = (invoiceNo, salesDate, customerId, items, paymentMode, gstInvoice) => {
-    return new Promise((resolve, reject) => {
-        // Fetch price for each product
-        let totalAmount = 0;
+  return new Promise((resolve, reject) => {
+    let totalAmount = 0;
 
-        let fetchPricesPromises = items.map(item => {
-            return new Promise((res, rej) => {
-                if (!item.productId || !item.qty) {
-                    return rej(new Error("Each item must have productId and qty"));
-                }
-                db.query( `SELECT price FROM product WHERE pid = ?`, [item.productId],(err, result) => {
-                        if (err) return rej(err);
-                        if (result.length === 0) 
-                            return rej(new Error(`Product ID ${item.productId} not found`));
+    // Validate and fetch prices
+    let fetchPricesPromises = items.map(item => {
+      return new Promise((res, rej) => {
+        db.query(`SELECT pprice, stock FROM product WHERE pid=?`, [item.productId], (err, result) => {
+          if (err) return rej(err);
+          if (result.length === 0) return rej(new Error(`Product ${item.productId} not found`));
 
-                        let rate = parseFloat(result[0].price);
-                        let subtotal = rate * item.qty;
-                        totalAmount += subtotal;
+          let product = result[0];
+          if (product.stock < item.qty) {
+            return rej(new Error(`Out of stock for Product ID ${item.productId}`));
+          }
 
-                        // Attach rate to the item for later insert
-                        item.rate = rate;
-
-                        res();
-                    }
-                );
-            });
+          let subtotal = product.pprice * item.qty;
+          totalAmount += subtotal;
+          item.rate = product.pprice; // attach price for sales_items
+          res();
         });
-        Promise.all(fetchPricesPromises)
-            .then(() => {
-                // Insert into sales table
-                db.query(`INSERT INTO sales (invoiceNo, salesDate, customerId, totalAmount, paymentMode, gstInvoice)VALUES (?, ?, ?, ?, ?, ?)`,
-                    [invoiceNo, salesDate, customerId, totalAmount, paymentMode, gstInvoice], (err, salesResult) => {
-                        if (err) 
-                            return reject(err);
-
-                        const saleId = salesResult.insertId;
-
-                        // Insert items into sales_items table
-                        let insertItemPromises = items.map(item => {
-                            return new Promise((res, rej) => {
-                                db.query( `INSERT INTO sales_items (salesId, productId, qty, rate) VALUES (?, ?, ?, ?)`,[saleId, item.productId, item.qty, item.rate],
-                                    (err) => {
-                                        if (err) return rej(err);
-                                        res();
-                                    }
-                                );
-                            });
-                        });
-
-                        Promise.all(insertItemPromises)
-                            .then(() => {
-                                resolve({ message: "Sale created successfully", saleId, totalAmount });//msg print saelsid and total amount
-                            })
-                            .catch(err => reject(err));
-                    }
-                );
-            })
-            .catch(err => reject(err));
+      });
     });
+
+    Promise.all(fetchPricesPromises)
+      .then(() => {
+        // Insert into sales
+        db.query(
+          `INSERT INTO sales (invoiceNo, salesDate, customerId, totalAmount, paymentMode, gstInvoice) VALUES (?, ?, ?, ?, ?, ?)`,
+          [invoiceNo, salesDate, customerId, totalAmount, paymentMode, gstInvoice],
+          (err, salesResult) => {
+            if (err) return reject(err);
+            const saleId = salesResult.insertId;
+
+            // Insert into sales_items + update stock
+            let tasks = items.map(item => {
+              return new Promise((res, rej) => {
+                db.query(
+                  `INSERT INTO sales_items (salesId, productId, qty, rate) VALUES (?, ?, ?, ?)`,
+                  [saleId, item.productId, item.qty, item.rate],
+                  (err) => {
+                    if (err) return rej(err);
+
+                    // reduce stock
+                    db.query(
+                      `UPDATE product SET stock = stock - ? WHERE pid=?`,
+                      [item.qty, item.productId],
+                      (err2) => {
+                        if (err2) return rej(err2);
+                        res();
+                      }
+                    );
+                  }
+                );
+              });
+            });
+
+            Promise.all(tasks)
+              .then(() => {
+                resolve({ 
+                  message: "Sale created successfully", 
+                  saleId, 
+                  totalAmount 
+                });
+              })
+              .catch(err => reject(err));
+          }
+        );
+      })
+      .catch(err => reject(err));
+  });
 };
+
 
 exports.viewSales=()=>
 {

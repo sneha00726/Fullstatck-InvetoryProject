@@ -57,7 +57,7 @@ export default class AddSupplier extends React.Component {
             </div>
           </div>
         </nav>
-        <div className="container p-5">
+        <div className="container-md p-5">
           <div className="form-group m-3">
             <input
               type="text"
