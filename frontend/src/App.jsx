@@ -16,6 +16,9 @@ import ViewCategory from "./pages/Category/viewCategory.jsx";
 import AddSupplier from "./pages/supplier/AddSupplier.jsx";
 import ViewSupplier from "./pages/supplier/VIewSupplier.jsx";
 import Product from "./pages/dashborad/product.jsx";
+
+import PurchaseManagement from "./pages/purchase/PurchaseManagement.jsx";
+
 export default class App extends React.Component{
   render(){
     let ProdWithParams=withRouterParams(DelProd);
@@ -39,8 +42,11 @@ export default class App extends React.Component{
     <Route path="/viewCategory" element={<ViewCategory/>}/>
 
 
-    <Route path="/AddSupplier" element={<AddSupplier/>}/>
+      <Route path="/AddSupplier" element={<AddSupplier/>}/>
       <Route path="/viewsupplier" element={<ViewSupplier/>}/>
+
+      <Route path="/purchases" element={<PurchaseManagement />} />
+
    </Routes>
    </BrowserRouter>
     
