@@ -10,7 +10,7 @@ exports.addSale = (req, res) => {
     promise.then((result) => {
         res.status(201).json(result);
     }).catch((err) => {
-        res.send("Purchase not saved: " + err.message);
+        res.send("sales not saved: " + err.message);
     });
 }
 
@@ -68,3 +68,17 @@ exports.deleteSalesById=(req,res)=>
 
     });
 }
+exports.salesSearch = (req, res) => {
+    let invoiceNo  = req.params.invoiceNo ; //
+    let promise = salesModel.searchsales(invoiceNo );
+
+    promise.then((result) => {
+        if (result.length > 0) {
+            res.status(200).json(result);
+        } else {
+            res.status(404).json({ message: "No sales found" });
+        }
+    }).catch((err) => {
+        res.status(500).json({ error: err.message });
+    });
+};

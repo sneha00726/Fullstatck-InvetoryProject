@@ -12,7 +12,10 @@ export default class AddCategory extends React.Component {
       name: "",
       msg: "",
       search: "",
-      editId: null, // for update
+      editId: null,
+      currentPage: 1,
+      categoriesPerPage: 9,
+      showForm: false,
       userRole: user?.role || "user",
     };
   }
@@ -36,18 +39,23 @@ export default class AddCategory extends React.Component {
     }
 
     if (editId) {
-      // update existing
-      CategoryService.updateCategory(editId, { cname: name })
+      // Update category
+      CategoryService.updateCategory(editId, { name }) // use 'name' not 'cname'
         .then((res) => {
-          this.setState({ msg: res.data.message, name: "", editId: null });
+          this.setState({
+            msg: res.data.message,
+            name: "",
+            editId: null,
+            showForm: false,
+          });
           this.loadCategories();
         })
         .catch(() => this.setState({ msg: "❌ Update failed" }));
     } else {
-      // add new
-      CategoryService.saveCategory({ cname: name })
+      // Add category
+      CategoryService.saveCategory({ name }) // use 'name' not 'cname'
         .then((res) => {
-          this.setState({ msg: res.data.message, name: "" });
+          this.setState({ msg: res.data.message, name: "", showForm: false });
           this.loadCategories();
         })
         .catch(() => this.setState({ msg: "❌ Add failed" }));
@@ -66,7 +74,7 @@ export default class AddCategory extends React.Component {
   };
 
   handleEdit = (category) => {
-    this.setState({ name: category.cname, editId: category.cid });
+    this.setState({ name: category.cname, editId: category.cid, showForm: true });
   };
 
   handleSearch = (e) => {
@@ -79,53 +87,68 @@ export default class AddCategory extends React.Component {
     }
 
     CategoryService.searchCategory(searchValue)
-      .then((res) => this.setState({ categories: res.data }))
+      .then((res) => this.setState({ categories: res.data, currentPage: 1 }))
       .catch(() => this.setState({ categories: [] }));
   };
 
+  paginate = (pageNumber) => this.setState({ currentPage: pageNumber });
+
   render() {
-    const { categories, name, msg, search, editId, userRole } = this.state;
+    const {
+      categories, name, msg, search, editId, currentPage, categoriesPerPage, showForm, userRole
+    } = this.state;
+
+    const indexOfLast = currentPage * categoriesPerPage;
+    const indexOfFirst = indexOfLast - categoriesPerPage;
+    const currentCategories = categories.slice(indexOfFirst, indexOfLast);
+    const totalPages = Math.ceil(categories.length / categoriesPerPage);
 
     return (
       <div className="container p-4">
-        <h3 className="mb-3">📂 Category Management</h3>
-
-        {/* Search (Both Admin & User) */}
-        <div className="mb-3 d-flex">
+        <div className="d-flex justify-content-between align-items-center mb-3">
           <input
             type="text"
-            placeholder="🔍 Search category..."
             className="form-control w-50"
+            placeholder="Search category..."
             value={search}
             onChange={this.handleSearch}
           />
+          {userRole === "admin" && (
+            <button
+              className="btn btn-primary ms-3"
+              onClick={() => this.setState({ showForm: !showForm })}
+            >
+              {showForm ? "View Categories" : "Add Category"}
+            </button>
+          )}
         </div>
 
-        {/* Add / Update Form (Admin only) */}
-        {userRole === "admin" && (
-          <div className="card p-3 mb-4 shadow">
-            <h5 className="mb-3">{editId ? "✏ Update Category" : "➕ Add Category"}</h5>
-            <div className="mb-2">
+        {showForm && userRole === "admin" && (
+          <div className="card p-4 mb-4">
+            <h4>{editId ? "Update Category" : "Add Category"}</h4>
+            <div className="form-group m-2">
               <input
                 type="text"
-                className="form-control"
-                placeholder="Enter category name"
                 value={name}
+                placeholder="Enter category name"
+                className="form-control"
                 onChange={(e) => this.setState({ name: e.target.value })}
               />
             </div>
-            <button
-              className={`btn ${editId ? "btn-warning" : "btn-success"}`}
-              onClick={this.handleAddOrUpdate}
-            >
-              {editId ? "Update" : "Add"}
-            </button>
-            <div className="mt-2 text-primary fw-bold">{msg}</div>
+            <div className="form-group m-2">
+              <button
+                className={`btn w-100 ${editId ? "btn-warning" : "btn-success"}`}
+                onClick={this.handleAddOrUpdate}
+              >
+                {editId ? "Update" : "Add"}
+              </button>
+            </div>
+            <div className="text-success">{msg}</div>
           </div>
         )}
 
-        {/* Category List */}
-        <table className="table table-striped table-hover text-center align-middle shadow-sm">
+        <h4>Category List</h4>
+        <table className="table table-hover table-striped align-middle text-center">
           <thead className="table-dark">
             <tr>
               <th>Category ID</th>
@@ -134,38 +157,54 @@ export default class AddCategory extends React.Component {
             </tr>
           </thead>
           <tbody>
-            {categories.length > 0 ? (
-              categories.map((cat) => (
-                <tr key={cat.cid}>
-                  <td>{cat.cid}</td>
-                  <td>{cat.cname}</td>
-                  {userRole === "admin" && (
-                    <td>
-                      <button
-                        className="btn btn-sm btn-warning me-2"
-                        onClick={() => this.handleEdit(cat)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => this.handleDelete(cat.cid)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))
-            ) : (
+            {currentCategories.length > 0 ? currentCategories.map((cat) => (
+              <tr key={cat.cid}>
+                <td>{cat.cid}</td>
+                <td>{cat.cname}</td>
+                {userRole === "admin" && (
+                  <td>
+                    <button
+                      className="btn btn-sm btn-warning me-2"
+                      onClick={() => this.handleEdit(cat)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => this.handleDelete(cat.cid)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                )}
+              </tr>
+            )) : (
               <tr>
-                <td colSpan={userRole === "admin" ? "3" : "2"} className="text-danger">
+                <td colSpan={userRole === "admin" ? "3" : "2"} className="text-danger fw-bold">
                   🚫 No categories found
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+
+        {totalPages > 1 && (
+          <nav>
+            <ul className="pagination justify-content-center">
+              <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                <button className="page-link" onClick={() => this.paginate(currentPage - 1)}>Prev</button>
+              </li>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <li key={i + 1} className={`page-item ${currentPage === i + 1 ? "active" : ""}`}>
+                  <button className="page-link" onClick={() => this.paginate(i + 1)}>{i + 1}</button>
+                </li>
+              ))}
+              <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+                <button className="page-link" onClick={() => this.paginate(currentPage + 1)}>Next</button>
+              </li>
+            </ul>
+          </nav>
+        )}
       </div>
     );
   }

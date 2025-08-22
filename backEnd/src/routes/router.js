@@ -43,7 +43,7 @@ router.get("/api/suppliers/view", VerifyToken, authorizeRoles("admin"), sctrl.vi
 router.get("/api/suppliers/:id", VerifyToken, authorizeRoles("admin"), sctrl.getSupplierById);
 router.put("/api/suppliers/update/:id", VerifyToken, authorizeRoles("admin"), sctrl.updateSupplierById);
 router.delete("/api/suppliers/delete/:id", VerifyToken, authorizeRoles("admin"), sctrl.deleteSupplierById);
-
+router.get("/api/suppliers/search/:name", VerifyToken, authorizeRoles("admin"),sctrl.searchSupplier);
 
 
 //customer
@@ -61,13 +61,13 @@ router.put("/api/purchases/update/:id", VerifyToken, authorizeRoles("admin"),pur
 router.delete("/api/purchases/delete/:id", VerifyToken, authorizeRoles("admin"),purctrl.deletePurchaseById);
 router.get("/api/purchases/search/:name", VerifyToken, authorizeRoles("admin"),purctrl.purchasesearch);
 
-//sales
+//salesa
 router.post("/api/sales/add", VerifyToken, authorizeRoles("admin","user"),salesctrl.addSale);
-router.get("/api/sales/view", VerifyToken, authorizeRoles("admin","user"),salesctrl.ViewAllSales);
+router.get("/api/sales/view",VerifyToken, authorizeRoles("admin","user"),salesctrl.ViewAllSales);
 router.get("/api/sales/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.GetbyIDSales);
 router.put("/api/sales/update/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.updateSalesById);
 router.delete("/api/sales/delete/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.deleteSalesById);
-
+router.get("/api/sales/search/:name", VerifyToken, authorizeRoles("admin","user"),salesctrl.salesSearch);
 
 
 module.exports = router;

@@ -117,7 +117,7 @@ exports.deleteProdById=(req,res)=>
 }
 
 exports.searchProdByName = (req, res) => {
-    let name = req.params.name; // ✅ get from route
+    let name = req.params.name; //
     let promise = pmodel.searchProdByName(name);
 
     promise.then((result) => {

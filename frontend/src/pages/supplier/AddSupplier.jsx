@@ -1,146 +1,348 @@
 import React from "react";
-import supplierservice from "../../services/supplierservice";
-import '../../styles/productdash.css';
-import { Link } from "react-router-dom";
+import SupplierService from "../../services/supplierservice";
+import { getCurrentUser, logoutUser } from "../../services/login.register";
+import "../../styles/productdash.css"; // reuse same CSS
+
 export default class AddSupplier extends React.Component {
   constructor() {
     super();
+    const user = getCurrentUser();
     this.state = {
-      name: '',
-      email: '',
-      phone: '',
-      companyname: '',
-      address: '',
-      gstnumber: '',
-      errors: [],
-      msg: ''
+      sid: "",
+      name: "",
+      email: "",
+      phone: "",
+      companyname: "",
+      address: "",
+      gstnumber: "",
+      msg: "",
+      suppliers: [],
+      currentPage: 1,
+      suppliersPerPage: 10,
+      showForm: false,
+      search: "",
+      userRole: user?.role || "user",
+      isLoggedIn: !!user,
     };
   }
 
-  sendToServer = () => {
-    let promise = supplierservice.saveSupplier(this.state);
-    promise
-      .then((result) => {
-        this.setState({ msg: result.data.message, errors: [] });
-      })
+  componentDidMount() {
+    if (this.state.isLoggedIn && this.state.userRole === "admin") {
+      this.loadSuppliers();
+    }
+  }
+
+  handleUnauthorized = () => {
+    logoutUser();
+    this.setState({
+      isLoggedIn: false,
+      msg: "Session expired. Please log in again.",
+    });
+  };
+
+  loadSuppliers = () => {
+    SupplierService.getSupplier()
+      .then((res) =>
+        this.setState({ suppliers: res.data.suppliers || [], msg: "" })
+      )
       .catch((err) => {
-        console.error("Insert failed:", err);
-        if (err.response && err.response.data && err.response.data.errors) {
-          // Backend validation errors
-          this.setState({ errors: err.response.data.errors, msg: "" });
+        console.error(err);
+        if (err.response?.status === 401 || err.message.includes("No token")) {
+          this.handleUnauthorized();
         } else {
-          // Generic error
-          this.setState({ msg: "Supplier insert failed Something is wrong: " + err.message, errors: [] });
+          this.setState({ msg: "Unable to load suppliers." });
         }
       });
   };
 
+  handleSearch = (e) => {
+    const searchValue = e.target.value;
+    this.setState({ search: searchValue });
+
+    if (!searchValue.trim()) {
+      this.loadSuppliers();
+      return;
+    }
+
+    SupplierService.searchSupplier(searchValue)
+      .then((res) =>
+        this.setState({
+          suppliers: res.data.suppliers || [],
+          currentPage: 1,
+          msg: "",
+        })
+      )
+      .catch((err) => {
+        console.error(err);
+        this.setState({ suppliers: [], msg: "No suppliers found." });
+      });
+  };
+
+  sendSupplierToServer = () => {
+    const { sid, name, email, phone, companyname, address, gstnumber } =
+      this.state;
+
+    if (!name || !email || !phone) {
+      this.setState({ msg: "Name, Email, and Phone are required" });
+      return;
+    }
+
+    const supplierData = {
+      name,
+      email,
+      phone,
+      companyname,
+      address,
+      gstnumber,
+    };
+
+    const action = sid
+      ? SupplierService.updateSupplier(sid, supplierData)
+      : SupplierService.saveSupplier(supplierData);
+
+    action
+      .then((res) => {
+        const msg = sid
+          ? "✅ Supplier updated successfully"
+          : res.data.message || "✅ Supplier added successfully";
+        this.setState({
+          msg,
+          showForm: false,
+          sid: "",
+          name: "",
+          email: "",
+          phone: "",
+          companyname: "",
+          address: "",
+          gstnumber: "",
+        });
+        this.loadSuppliers();
+      })
+      .catch((err) => {
+        console.error(err);
+        if (err.response?.status === 401 || err.message.includes("No token")) {
+          this.handleUnauthorized();
+        } else {
+          this.setState({
+            msg: err.response?.data?.message || "❌ Action failed",
+          });
+        }
+      });
+  };
+
+  deleteSupplier = (sid) => {
+    if (window.confirm("Are you sure you want to delete this supplier?")) {
+      SupplierService.delSupplier(sid)
+        .then(() => {
+          this.setState({ msg: "🗑️ Supplier deleted successfully" });
+          this.loadSuppliers();
+        })
+        .catch((err) => {
+          console.error(err);
+          if (err.response?.status === 401 || err.message.includes("No token")) {
+            this.handleUnauthorized();
+          } else {
+            this.setState({
+              msg: err.response?.data?.message || "❌ Supplier deletion failed",
+            });
+          }
+        });
+    }
+  };
+
+  paginate = (pageNumber) => this.setState({ currentPage: pageNumber });
+
   render() {
-    return (
-      <>
-      <nav className="navbar navbar-expand-lg bg-body-tertiary">
-          <div className="container-fluid header">
-            <a className="navbar-brand" href="#home">Supplier</a>
+    const {
+      sid,
+      name,
+      email,
+      phone,
+      companyname,
+      address,
+      gstnumber,
+      msg,
+      suppliers,
+      currentPage,
+      suppliersPerPage,
+      showForm,
+      search,
+      userRole,
+      isLoggedIn,
+    } = this.state;
 
-            <div className="collapse navbar-collapse option" id="navbarNav">
-              <ul className="navbar-nav">
-                <li className="nav-item">
-                  <Link to="/AddSupplier">Add supplier</Link>
-                </li>
-                <li className="nav-item">
-                   <Link to="/viewsupplier">View supplier</Link>
-                </li>
-               <li className="nav-item">
-                   <Link to="/dashboard"> DashBoard</Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </nav>
-        <div className="container-md p-5">
-          <div className="form-group m-3">
-            <input
-              type="text"
-              name="name"
-              value={this.state.name}
-              placeholder="Enter the name"
-              onChange={(e) => this.setState({ name: e.target.value })}
-              className="form-control"
-            />
-          </div>
-          <div className="form-group m-3">
-            <input
-              type="text"
-              name="email"
-              value={this.state.email}
-              placeholder="Enter the email"
-              onChange={(e) => this.setState({ email: e.target.value })}
-              className="form-control"
-            />
-          </div>
-          <div className="form-group m-3">
-            <input
-              type="tel"
-              name="phone"
-              value={this.state.phone}
-              placeholder="Enter the Phone"
-              onChange={(e) => this.setState({ phone: e.target.value })}
-              className="form-control"
-            />
-          </div>
-          <div className="form-group m-3">
-            <input
-              type="text"
-              name="companyname"
-              value={this.state.companyname}
-              placeholder="Enter the Company name"
-              onChange={(e) => this.setState({ companyname: e.target.value })}
-              className="form-control"
-            />
-          </div>
-          <div className="form-group m-3">
-            <input
-              type="text"
-              name="address"
-              value={this.state.address}
-              placeholder="Enter the Address"
-              onChange={(e) => this.setState({ address: e.target.value })}
-              className="form-control"
-            />
-          </div>
-          <div className="form-group m-3">
-            <input
-              type="text"
-              name="gstnumber"
-              value={this.state.gstnumber}
-              placeholder="Enter the GST Number"
-              onChange={(e) => this.setState({ gstnumber: e.target.value })}
-              className="form-control"
-            />
-          </div>
-
-          <div>
-            <input
-              type="button"
-              name="s"
-              value="Add new Supplier"
-              className="form-control btn btn-primary"
-              onClick={this.sendToServer}
-            />
-          </div>
-
-          <div className="form-group m-3">
-            {this.state.errors.length > 0 && (
-              <ul style={{ color: "red" }}>
-                {this.state.errors.map((err, index) => (
-                  <li key={index}>{err}</li>
-                ))}
-              </ul>
-            )}
-            {this.state.msg && <p style={{ color: "green" }}>{this.state.msg}</p>}
-          </div>
+    if (!isLoggedIn) {
+      return (
+        <div className="container p-4">
+          <h4 className="text-danger">
+            {msg || "You are not logged in."}
+          </h4>
         </div>
-      </>
+      );
+    }
+
+    if (userRole !== "admin") {
+      return (
+        <div className="container p-4">
+          <h4 className="text-danger">Access Denied! Admin only.</h4>
+        </div>
+      );
+    }
+
+    const indexOfLast = currentPage * suppliersPerPage;
+    const indexOfFirst = indexOfLast - suppliersPerPage;
+    const currentSuppliers = suppliers.slice(indexOfFirst, indexOfLast);
+    const totalPages = Math.ceil(suppliers.length / suppliersPerPage);
+
+    return (
+      <div className="container p-4">
+        {msg && <div className="alert alert-info">{msg}</div>}
+
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <input
+            type="text"
+            className="form-control w-50"
+            placeholder="Search supplier..."
+            value={search}
+            onChange={this.handleSearch}
+          />
+          <button
+            className="btn btn-primary ms-3"
+            onClick={() =>
+              this.setState({
+                showForm: !showForm,
+                sid: "",
+                name: "",
+                email: "",
+                phone: "",
+                companyname: "",
+                address: "",
+                gstnumber: "",
+              })
+            }
+          >
+            {showForm ? "View Suppliers" : "Add Supplier"}
+          </button>
+        </div>
+
+        {showForm && (
+          <div className="card p-4 mb-4">
+            <h4>{sid ? "Update Supplier" : "Add Supplier"}</h4>
+            {["name", "email", "phone", "companyname", "address", "gstnumber"].map(
+              (field) => (
+                <div className="form-group m-2" key={field}>
+                  <input
+                    type={field === "email" ? "email" : "text"}
+                    value={this.state[field]}
+                    placeholder={`Enter ${field}`}
+                    className="form-control"
+                    onChange={(e) =>
+                      this.setState({ [field]: e.target.value })
+                    }
+                  />
+                </div>
+              )
+            )}
+            <button
+              className="btn btn-success w-100"
+              onClick={this.sendSupplierToServer}
+            >
+              {sid ? "Update Supplier" : "Save Supplier"}
+            </button>
+          </div>
+        )}
+
+        <h4>Supplier List</h4>
+        <table className="table table-hover table-striped align-middle text-center">
+          <thead className="table-dark">
+            <tr>
+              <th>SID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Company</th>
+              <th>Address</th>
+              <th>GST</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentSuppliers.length > 0 ? (
+              currentSuppliers.map((sup) => (
+                <tr key={sup.sid}>
+                  <td>{sup.sid}</td>
+                  <td>{sup.name}</td>
+                  <td>{sup.email}</td>
+                  <td>{sup.phone}</td>
+                  <td>{sup.companyname}</td>
+                  <td>{sup.address}</td>
+                  <td>{sup.gstnumber}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-warning me-2"
+                      onClick={() =>
+                        this.setState({ showForm: true, ...sup })
+                      }
+                    >
+                      Update
+                    </button>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => this.deleteSupplier(sup.sid)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" className="text-danger fw-bold">
+                  🚫 No suppliers found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        <nav>
+          <ul className="pagination justify-content-center">
+            <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+              <button
+                className="page-link"
+                onClick={() => this.paginate(currentPage - 1)}
+              >
+                Prev
+              </button>
+            </li>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <li
+                key={i + 1}
+                className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => this.paginate(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              </li>
+            ))}
+            <li
+              className={`page-item ${
+                currentPage === totalPages ? "disabled" : ""
+              }`}
+            >
+              <button
+                className="page-link"
+                onClick={() => this.paginate(currentPage + 1)}
+              >
+                Next
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
     );
   }
 }

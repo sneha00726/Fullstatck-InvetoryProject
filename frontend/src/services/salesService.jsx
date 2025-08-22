@@ -1,28 +1,36 @@
-// services/SaleService.js
 import axios from "axios";
 
 const API_URL = "http://localhost:3000/api/sales";
+const getToken = () => localStorage.getItem("token");
 
-const addSale = (saleData, token) => {
-  return axios.post(`${API_URL}/add`, saleData, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-};
+class SaleService {
+  getAuthHeaders() {
+    return { headers: { Authorization: `Bearer ${getToken()}` } };
+  }
 
-const getAllSales = (token) => {
-  return axios.get(`${API_URL}/view`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-};
+  addSale(saleData) {
+    return axios.post(`${API_URL}/add`, saleData, this.getAuthHeaders());
+  }
 
-const getSaleById = (id, token) => {
-  return axios.get(`${API_URL}/${id}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-};
+  getAllSales() {
+    return axios.get(`${API_URL}/view`, this.getAuthHeaders());
+  }
 
-export default {
-  addSale,
-  getAllSales,
-  getSaleById
-};
+  getSaleById(id) {
+    return axios.get(`${API_URL}/${id}`, this.getAuthHeaders());
+  }
+
+  updateSale(id, saleData) {
+    return axios.put(`${API_URL}/update/${id}`, saleData, this.getAuthHeaders());
+  }
+
+  deleteSale(id) {
+    return axios.delete(`${API_URL}/delete/${id}`, this.getAuthHeaders());
+  }
+
+  searchSale(name) {
+    return axios.get(`${API_URL}/search/${name}`, this.getAuthHeaders());
+  }
+}
+
+export default new SaleService();
