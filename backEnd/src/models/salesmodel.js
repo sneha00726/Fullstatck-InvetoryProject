@@ -1,15 +1,16 @@
-
 let db=require("../../db.js");
-
 
 exports.createSale = (invoiceNo, salesDate, customerId, items, paymentMode, gstInvoice) => {
     return new Promise((resolve, reject) => {
         // Fetch price for each product
         let totalAmount = 0;
 
-        let fetchPricesPromises = items.map(item => {
-            return new Promise((res, rej) => {
-                if (!item.productId || !item.qty) {
+        let fetchPricesPromises = items.map(item => 
+        {
+            return new Promise((res, rej) => 
+            {
+                if (!item.productId || !item.qty) 
+                {
                     return rej(new Error("Each item must have productId and qty"));
                 }
                 db.query( `SELECT price FROM product WHERE pid = ?`, [item.productId],(err, result) => {

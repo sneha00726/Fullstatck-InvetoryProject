@@ -37,7 +37,8 @@ exports.addPurchase=(invoiceno,purchasedate,supplierid,paymentmode,gstinvoice,it
             db.query(
                 purchaseSql,
                 [invoiceno,purchasedate,supplierid,totalAmount,paymentmode,gstinvoice],
-                (err1,result1)=>{
+                (err1,result1)=>
+                {
                     if (err1) return db.rollback(() => reject(err1));
 
                     let purchaseId=result1.insertId;
@@ -156,7 +157,7 @@ exports.updatePurchaseById=(id,purchaseData)=>
         {
             if(err) return reject(err);
 
-            const sqlPurchase=`
+            let sqlPurchase=`
                 update purchase 
                 set invoiceno=?, purchasedate=?, supplierid=?, totalamount=?, paymentmode=?, gstinvoice=?
                 where id=?
@@ -169,11 +170,11 @@ exports.updatePurchaseById=(id,purchaseData)=>
                 {
                     if(err1) return db.rollback(()=>reject(err1));
 
-                    const updateItemPromises=items.map(item=> 
+                    let updateItemPromises=items.map(item=> 
                     {
                         return new Promise((res,rej)=> 
                         {
-                            const sqlUpdateItem=`
+                            let sqlUpdateItem=`
                                 update purchase_items 
                                 set productid = ?, quantity = ?, price = ? 
                                 where id = ? and purchaseid = ?
@@ -190,17 +191,17 @@ exports.updatePurchaseById=(id,purchaseData)=>
                         {
                             db.commit((err3)=>
                             {
-                                if (err3) return db.rollback(() => reject(err3));
+                                if (err3) return db.rollback(()=>reject(err3));
                                 
-                                resolve({ message: "Purchase and items updated successfully", totalAmount });
+                                resolve({ message: "Purchase and items updated successfully", totalAmount});
                             });
                         })
-                        .catch(err4 => db.rollback(() => reject(err4)));
+                        .catch(err4=>db.rollback(()=>reject(err4)));
                 }
             );
         });
     });
-};
+}
 
 exports.deletePurchaseById=(id)=>{
     return new Promise((resolve,reject)=>{
