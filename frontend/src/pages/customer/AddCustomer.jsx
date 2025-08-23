@@ -3,7 +3,7 @@ import CustService from "../../services/customerService";
 import { getCurrentUser } from "../../services/login.register";
 import "../../styles/productdash.css"; // reuse same CSS
 
-export default class CustomerDashboard extends React.Component {
+export default class AddCustomer extends React.Component {
   constructor() {
     super();
     const user = getCurrentUser();
@@ -20,7 +20,7 @@ export default class CustomerDashboard extends React.Component {
       customersPerPage: 10,
       showForm: false,
       search: "",
-      userRole: user?.role || "user", // ✅ both roles can access
+      userRole: user?.role || "user", //  both roles can access
     };
   }
 

@@ -5,7 +5,7 @@ import ProductService from "../../services/ProductSerivce";
 import "../../styles/productdash.css";
 
 export default function AddSales() {
-  const [tab, setTab] = useState("add"); // "add" or "view"
+  const [tab, setTab] = useState("add");
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [invoiceNo, setInvoiceNo] = useState("");
@@ -15,12 +15,11 @@ export default function AddSales() {
   const [msg, setMsg] = useState("");
   const [sales, setSales] = useState([]);
 
-  // Search & Pagination
+  // Pagination
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(5);
+  const pageSize = 5;
 
-  // Selected saleId for update
   const [updateSaleId, setUpdateSaleId] = useState(null);
 
   // Load initial data
@@ -39,26 +38,40 @@ export default function AddSales() {
   const handleProductChange = (index, field, value) => {
     const list = [...saleProducts];
     list[index][field] = value;
+
     if (field === "product_id") {
       const selected = products.find(p => p.pid === parseInt(value));
       if (selected) {
         list[index].product_price = selected.price;
         list[index].product_name = selected.pname;
+        // Reset qty to 1 or maximum available stock if current qty exceeds stock
+        if (list[index].qty > selected.stock) list[index].qty = selected.stock > 0 ? 1 : 0;
       }
     }
+
+    if (field === "qty") {
+      const selected = products.find(p => p.pid === parseInt(list[index].product_id));
+      if (selected && value > selected.stock) {
+        list[index].qty = selected.stock; // cap qty to available stock
+      }
+    }
+
     setSaleProducts(list);
   };
 
   const addProductRow = () => setSaleProducts([...saleProducts, { product_id: "", qty: 1, product_price: 0, product_name: "" }]);
   const removeProductRow = index => {
-    const list = [...saleProducts]; list.splice(index, 1); setSaleProducts(list);
+    const list = [...saleProducts];
+    list.splice(index, 1);
+    setSaleProducts(list);
   };
 
   const calculateTotal = () => saleProducts.reduce((sum, p) => sum + p.qty * parseFloat(p.product_price || 0), 0);
 
   const saveSale = () => {
     if (!customer_id || saleProducts.length === 0) {
-      setMsg("Select customer and at least one product"); return;
+      setMsg("Select customer and at least one product"); 
+      return;
     }
     if (!invoiceNo) { setMsg("Enter Invoice No"); return; }
 
@@ -68,7 +81,7 @@ export default function AddSales() {
     const request = updateSaleId ? SalesService.updateSale(updateSaleId, saleData) : SalesService.addSale(saleData);
 
     request.then(res => {
-      setMsg(updateSaleId ? "✅ Sale updated successfully!" : `✅ Sale saved successfully! Total: ₹${calculateTotal().toFixed(2)}`);
+      setMsg(updateSaleId ? "Sale updated successfully!" : `Sale saved successfully! Total: ₹${calculateTotal().toFixed(2)}`);
       setSaleProducts([{ product_id: "", qty: 1, product_price: 0, product_name: "" }]);
       setCustomerId(""); setInvoiceNo(""); setUpdateSaleId(null);
       loadSales();
@@ -87,16 +100,19 @@ export default function AddSales() {
     return acc;
   }, {});
 
-  // Filter & Pagination
   const filteredInvoices = Object.keys(groupedSales).filter(inv => inv.toLowerCase().includes(searchTerm.toLowerCase()));
   const paginatedInvoices = filteredInvoices.slice((currentPage-1)*pageSize, currentPage*pageSize);
 
   const handleDelete = invoiceNo => {
     if (!window.confirm(`Delete sale ${invoiceNo}?`)) return;
     const saleId = groupedSales[invoiceNo][0].salesId;
+
     SalesService.deleteSale(saleId)
-      .then(() => { setMsg(`✅ Sale ${invoiceNo} deleted`); loadSales(); })
-      .catch(err => { console.error(err.response ? err.response.data : err.message); setMsg("❌ Delete failed"); });
+      .then(() => {
+        setMsg("Sale deleted successfully!");
+        loadSales();
+      })
+      .catch(() => setMsg(" Failed to delete sale"));
   };
 
   const handleUpdate = invoiceNo => {
@@ -125,7 +141,6 @@ export default function AddSales() {
 
       {msg && <div className="alert alert-info">{msg}</div>}
 
-      {/* Add Sale */}
       {tab==="add" &&
         <div className="card p-4">
           <h4>{updateSaleId ? "Update Sale" : "Add Sale"}</h4>
@@ -146,11 +161,15 @@ export default function AddSales() {
               <div className="col">
                 <select className="form-control" value={item.product_id} onChange={e=>handleProductChange(index,"product_id",e.target.value)}>
                   <option value="">Select Product</option>
-                  {products.map(p => <option key={p.pid} value={p.pid}>{p.pname}</option>)}
+                  {products.map(p => (
+                    <option key={p.pid} value={p.pid} disabled={p.stock <= 0}>
+                      {p.pname} {p.stock <= 0 ? "(Out of stock)" : `(Stock: ${p.stock})`}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="col">
-                <input type="number" min="1" className="form-control" value={item.qty} onChange={e=>handleProductChange(index,"qty",parseInt(e.target.value))}/>
+                <input type="number" min="1" className="form-control" value={item.qty} onChange={e=>handleProductChange(index,"qty",parseInt(e.target.value))} max={products.find(p=>p.pid===parseInt(item.product_id))?.stock || 1}/>
               </div>
               <div className="col">
                 <input type="text" className="form-control" value={item.product_price} readOnly/>

@@ -128,23 +128,23 @@ exports.updateSales=(id,salesDate,customerId,paymentMode,gstInvoice)=>
     });
 }
 
-exports.salesDelete=(id)=>{
- 
-    return new Promise((resolve,reject)=>
-    {
-        db.query(`delete from sales where salesId=?`,[id],(err,result)=>{
-                if(err)
-                {
-                    reject(err);
-                }
-                else{
-                    resolve(result);
-                }
-                });
+exports.salesDelete = (id) => {
+  return new Promise((resolve, reject) => {
+    db.query(`DELETE FROM sales_items WHERE salesId=?`, [id], (err) => {
+      if (err) return reject(err);
+
+      db.query(`DELETE FROM sales WHERE salesId=?`, [id], (err2, result) => {
+        if (err2) return reject(err2);
+
+        if (result.affectedRows === 0) {
+          return reject(new Error("No sale found with this ID"));
+        }
+
+        resolve({ message: "Sale deleted", affectedRows: result.affectedRows });
+      });
     });
-}
-
-
+  });
+};
 exports.searchsales = (invoiceNo ) => {
     return new Promise((resolve, reject) => {
         db.query(

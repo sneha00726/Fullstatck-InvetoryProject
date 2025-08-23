@@ -53,17 +53,3 @@ class ProductService {
 }
 
 export default new ProductService();
-import * as jwt_decode from "jwt-decode";
-
-export const getCurrentUser = () => {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
-
-  try {
-    const decoded = jwt_decode(token); // decode JWT payload
-    return { id: decoded.id, role: decoded.role }; // return user info
-  } catch (err) {
-    console.error("Invalid token");
-    return null;
-  }
-};

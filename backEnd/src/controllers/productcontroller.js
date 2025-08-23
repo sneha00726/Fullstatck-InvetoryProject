@@ -111,7 +111,7 @@ exports.deleteProdById=(req,res)=>
         }
     }).catch((err)=>
     {
-       res.status(404).json({'message':'Record not Deleted'});
+       res.status(404).json({'message':'Record not Deleted'+err});
         //console.log("Product not deleted");
     });
 }
