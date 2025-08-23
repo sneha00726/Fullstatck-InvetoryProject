@@ -1,52 +1,76 @@
-import React from "react";
-import "../../styles/loginsignup.css";
+import React, { useState } from "react";
 import { loginUser } from "../../services/login.register";
 
-export default class LoginPage extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      email: "",
-      password: "",
-      message: ""
-    };
-  }
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
 
-  handleLogin = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const { email, password } = this.state;
     try {
       const res = await loginUser({ email, password });
-      this.setState({ message: res.message });
-      // After login, redirect to dashboard
+      setMessage(res.message || "Login successful!");
+      // Redirect to dashboard/home page
       window.location.href = "/dashboard";
     } catch (err) {
-      this.setState({ message: err.message || "Login failed" });
+      setMessage(err.message || "Login failed");
     }
   };
 
-  render() {
-    const { email, password, message } = this.state;
-    return (
-      <div className="Login">
-        <h2>Login</h2>
-        <form onSubmit={this.handleLogin}>
-          <div className="form-group control">
-            <label>Email:</label>
-            <input type="email" value={email} placeholder="Enter email" className="form-control"
-                   onChange={(e) => this.setState({ email: e.target.value })} required />
+  const goHome = () => {
+    window.location.href = "/";
+  };
+
+  return (
+    <div className="container mt-5">
+      <div className="row justify-content-center">
+        <div className="col-md-5">
+          <div className="card shadow-lg">
+            <div className="card-header bg-primary text-white text-center">
+              <h3>Login</h3>
+            </div>
+            <div className="card-body">
+              <form onSubmit={handleLogin}>
+                <div className="mb-3">
+                  <label className="form-label">Email:</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Password:</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="d-grid mb-2">
+                  <button type="submit" className="btn btn-success">
+                    Login
+                  </button>
+                </div>
+              </form>
+              <div className="d-grid">
+                <button className="btn btn-secondary" onClick={goHome}>
+                  Go to Home
+                </button>
+              </div>
+              {message && <p className="text-danger mt-3 text-center">{message}</p>}
+            </div>
+            <div className="card-footer text-center">
+              Don't have an account? <a href="/signup">Sign Up</a>
+            </div>
           </div>
-          <div className="form-group control">
-            <label>Password:</label>
-            <input type="password" value={password} placeholder="Enter password" className="form-control"
-                   onChange={(e) => this.setState({ password: e.target.value })} required />
-          </div>
-          <div className="form-group control">
-            <input type="submit" className="btn btn-primary" value="Login" />
-          </div>
-          {message && <p style={{ color: "red" }}>{message}</p>}
-        </form>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
 }

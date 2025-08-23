@@ -63,7 +63,7 @@ exports.LoginPage=(req,res)=>
                     id:userdata.id,
                     role:userdata.role
 
-                },process.env.secretKey,{expiresIn:'3d'});
+                },process.env.secretKey,{expiresIn:'1d'});
                  res.status(200).json({
                     message:"login succesful",
                     token:token

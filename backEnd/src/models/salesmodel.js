@@ -75,3 +75,89 @@ exports.createSale = (invoiceNo, salesDate, customerId, items, paymentMode, gstI
       .catch(err => reject(err));
   });
 };
+
+exports.viewSales=()=>
+{
+    return new Promise((resolve,reject)=>
+    {
+         db.query(`select s.salesID,s.invoiceNo,s.salesDate,s.totalAmount,s.paymentMode,gstInvoice,c.id as customer_id,c.name as customer_name,
+            c.email,c.company_name,p.pname as product_name ,si.qty,si.rate as product_price from sales s join customer c on s.customerId=c.id 
+            join sales_items si on s.salesID=si.salesID join product p on si.productId=p.pid`,(err,result)=>{
+                if(err)
+                {
+                    reject(err);
+                }
+                else{
+                    resolve(result);
+                }
+            });
+    });
+}
+
+exports.getSalebyID=(id)=>
+{
+    return new Promise((resolve,reject)=>
+    {
+        db.query(`select s.salesID,s.invoiceNo,s.salesDate,s.totalAmount,s.paymentMode,gstInvoice,c.id as customer_id,c.name as customer_name,
+            c.email,c.company_name,p.pname as product_name ,si.qty,si.rate as product_price from sales s join customer c on s.customerId=c.id 
+            join sales_items si on s.salesID=si.salesID join product p on si.productId=p.pid where s.salesId=?`,[id],(err,result)=>{
+                if(err)
+                {
+                    reject(err);
+                }
+                else{
+                    resolve(result);
+                }
+            });
+        
+    });
+}
+exports.updateSales=(id,salesDate,customerId,paymentMode,gstInvoice)=>
+{
+    return new Promise((resolve,reject)=>
+    {
+        db.query(`UPDATE sales 
+             SET  salesDate=?, customerId=?, paymentMode=?, gstInvoice=? 
+             WHERE salesId=?`,[salesDate,customerId,paymentMode,gstInvoice,id],(err,result)=>
+                {
+                    if(err)
+                {
+                    reject(err);
+                }
+                else{
+                    resolve(result);
+                }
+                });
+    });
+}
+
+exports.salesDelete = (id) => {
+  return new Promise((resolve, reject) => {
+    db.query(`DELETE FROM sales_items WHERE salesId=?`, [id], (err) => {
+      if (err) return reject(err);
+
+      db.query(`DELETE FROM sales WHERE salesId=?`, [id], (err2, result) => {
+        if (err2) return reject(err2);
+
+        if (result.affectedRows === 0) {
+          return reject(new Error("No sale found with this ID"));
+        }
+
+        resolve({ message: "Sale deleted", affectedRows: result.affectedRows });
+      });
+    });
+  });
+};
+exports.searchsales = (invoiceNo ) => {
+    return new Promise((resolve, reject) => {
+        db.query(
+            "SELECT * FROM sales WHERE invoiceNo  LIKE ?",
+            [`%${invoiceNo }%`],
+            (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            }
+        );
+    });
+};
+

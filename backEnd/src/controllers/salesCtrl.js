@@ -57,7 +57,7 @@ exports.updateSalesById=(req,res)=>
 
 exports.deleteSalesById=(req,res)=>
 {
-    console.log("hit the delete salws");
+    //console.log("hit the delete salws");
     let id = req.params.id;
     let promise=salesModel.salesDelete(id);
     promise.then((result)=>{

@@ -10,6 +10,8 @@ let salesctrl=require("../controllers/salesCtrl.js");
 
 let dash=require("../controllers/dashboard.js");
 
+let userctr=require("../controllers/userctrl.js");
+
 let router = express.Router();
 
 let { VerifyToken } = require("../middleware/authmiddleware.js");  
@@ -39,12 +41,6 @@ router.delete("/api/products/delete/:id", VerifyToken, authorizeRoles("admin"), 
 router.get("/api/products/search/:name", VerifyToken, authorizeRoles("admin","user"), pctrl.searchProdByName);
 
 //supplier
-
-router.post("/api/suppliers/add", sctrl.addSupplier);
-router.get("/api/suppliers/view", sctrl.viewSuppliers);
-router.get("/api/suppliers/:id", sctrl.getSupplierById);
-router.put("/api/suppliers/update/:id", sctrl.updateSupplierById);
-router.delete("/api/suppliers/delete/:id", sctrl.deleteSupplierById);
 
 router.post("/api/suppliers/add", VerifyToken, authorizeRoles("admin"), sctrl.addSupplier);
 router.get("/api/suppliers/view", VerifyToken, authorizeRoles("admin"), sctrl.viewSuppliers);
@@ -76,6 +72,15 @@ router.get("/api/sales/:id", VerifyToken, authorizeRoles("admin","user"),salesct
 router.put("/api/sales/update/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.updateSalesById);
 router.delete("/api/sales/delete/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.deleteSalesById);
 router.get("/api/sales/search/:name", VerifyToken, authorizeRoles("admin","user"),salesctrl.salesSearch);
+
+//usermange
+router.post("/api/users/add", VerifyToken, authorizeRoles("admin"), userctr.addUser);
+router.get("/api/users/view", VerifyToken, authorizeRoles("admin"), userctr.viewUsers);
+router.get("/api/users/:id", VerifyToken, authorizeRoles("admin"), userctr.getUserById);
+router.put("/api/users/update/:id", VerifyToken, authorizeRoles("admin"), userctr.updateUser);
+router.delete("/api/users/delete/:id", VerifyToken, authorizeRoles("admin"), userctr.deleteUser);
+router.get("/api/users/search/:keyword", VerifyToken, authorizeRoles("admin"), userctr.searchUsers);
+
 
 module.exports = router;
 

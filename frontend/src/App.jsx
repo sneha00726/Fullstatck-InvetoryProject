@@ -6,21 +6,21 @@ import LoginPage from "./pages/loginRegister/login";
 import SignUp from "./pages/loginRegister/signUp";
 import DashBoard from "./pages/dashborad/DashBorad.jsx";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import withRouterParams from "./pages/product/withRouterParams.jsx";
+
 import { BrowserRouter,Routes,Route,NavLink,Link } from "react-router-dom";
 import AddProduct from "./pages/product/AddProduct";
 import AddCategory from "./pages/Category/AddCategory.jsx";
-
 import AddSupplier from "./pages/supplier/AddSupplier.jsx";
-import ViewSupplier from "./pages/supplier/VIewSupplier.jsx";
+import AddCustomer from "./pages/customer/AddCustomer.jsx";
+import AddSale from "./pages/sales/AddSales.jsx";
 
 import Footer from "./component/layout/footer.jsx";
 import FeatureSection from "./pages/home/FeatureSection.jsx";
 import ReviewSection from "./pages/home/reviewSection.jsx";
 import HeroSection from "./pages/home/heroSection.jsx";
 import AboutSection from "./pages/home/aboutSection.jsx";
-
-import AddCustomer from "./pages/customer/AddCustomer.jsx";
+import UserManage from "./pages/userManage.jsx";
+import AddPurchase from "./pages/Purchase.jsx";
 
 import AddSale from "./pages/sales/AddSales.jsx";
 
@@ -40,8 +40,7 @@ export default class App extends React.Component{
     <Route path="/signup" element={<SignUp/>}/>
 
     {/* Dashboard Layout with nested routes */}
-    <Route path="/dashboard" element={<DashBoard/>}>
-      
+    <Route path="/dashboard" element={<DashBoard/>}>      
       {/* Product routes */}
       <Route path="addproduct" element={<AddProduct />} />
 
@@ -50,8 +49,7 @@ export default class App extends React.Component{
       
       {/* Supplier routes */}
       <Route path="addsupplier" element={<AddSupplier/>}/>
-      <Route path="viewsupplier" element={<ViewSupplier/>}/>
-
+      
       {/* Customer routes */}
       <Route path="addcustomer" element={<AddCustomer/>}/>
      
@@ -60,7 +58,10 @@ export default class App extends React.Component{
 
       {/* Sales */}
       <Route path="addsales" element={<AddSale/>}/>
+      <Route path="user" element={<UserManage/>}/>
+       <Route path="purchases" element={<AddPurchase/>}/>
 
+      {/*  Default dashboard content */}
       <Route index element={<h2>Welcome to Dashboard </h2>}/>
     </Route>
 
