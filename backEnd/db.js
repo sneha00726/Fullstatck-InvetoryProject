@@ -6,6 +6,7 @@ let conn=mysql.createConnection({
     user:process.env.db_username,
     password:process.env.db_password,
     database:process.env.db_name,
+    multipleStatements: true  
 });
 
 conn.connect((err)=>

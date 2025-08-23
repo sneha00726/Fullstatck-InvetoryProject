@@ -86,3 +86,15 @@ exports.deleteSupplierById=(id)=>{
         });
     });
 }
+exports.searchSupplierByName = (name) => {
+    return new Promise((resolve, reject) => {
+        db.query(
+            "SELECT * FROM supplier WHERE name LIKE ?",
+            [`%${name}%`],
+            (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            }
+        );
+    });
+};

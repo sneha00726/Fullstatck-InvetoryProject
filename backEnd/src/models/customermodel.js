@@ -98,3 +98,16 @@ exports.DeleteByID=(id)=>
     });
     });
 }
+
+exports.searchCustomer = (name) => {
+    return new Promise((resolve, reject) => {
+        db.query(
+            "SELECT * FROM customer WHERE name LIKE ?",
+            [`%${name}%`],
+            (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            }
+        );
+    });
+};

@@ -8,7 +8,7 @@ export default class FeatureSection  extends React.Component{
     {
         return <>
         <div id="feature" className="featuresection">
-       <div className="container my-5 ">
+       <div className="container  ">
       <h2 className="text-center mb-4">Features</h2>
       <div className="row text-center">
         

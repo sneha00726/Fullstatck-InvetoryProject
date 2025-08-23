@@ -87,19 +87,15 @@ exports.deleteProdById=(id)=>{
     });
 }
 
-exports.searchProdByName=(name) =>{
-    return new Promise((resolve, reject)=> 
-    {
-        // Parameterized query using the LIKE operator
-       db.query("SELECT * FROM product WHERE pname LIKE '%"+name+"%' ",(err, result)=>{
-            if(err) 
-            {
-                reject(err); 
-            }else 
-            {
-                resolve(result);
+exports.searchProdByName = (name) => {
+    return new Promise((resolve, reject) => {
+        db.query(
+            "SELECT * FROM purchase WHERE pname LIKE ?",
+            [`%${name}%`],
+            (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
             }
-        });
+        );
     });
-}
-
+};

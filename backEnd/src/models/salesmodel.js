@@ -1,136 +1,77 @@
-let db=require("../../db.js");
+let db = require("../../db.js");
 
 exports.createSale = (invoiceNo, salesDate, customerId, items, paymentMode, gstInvoice) => {
-    return new Promise((resolve, reject) => {
-        // Fetch price for each product
-        let totalAmount = 0;
+  return new Promise((resolve, reject) => {
+    let totalAmount = 0;
 
-        let fetchPricesPromises = items.map(item => 
-        {
-            return new Promise((res, rej) => 
-            {
-                if (!item.productId || !item.qty) 
-                {
-                    return rej(new Error("Each item must have productId and qty"));
-                }
-                db.query( `SELECT price FROM product WHERE pid = ?`, [item.productId],(err, result) => {
-                        if (err) return rej(err);
-                        if (result.length === 0) 
-                            return rej(new Error(`Product ID ${item.productId} not found`));
+    // Step 1: Validate products and calculate total
+    let fetchPricesPromises = items.map(item => {
+      return new Promise((res, rej) => {
+        if (!item.productId || !item.qty) {
+          return rej(new Error("Each item must have productId and qty"));
+        }
 
-                        let rate = parseFloat(result[0].price);
-                        let subtotal = rate * item.qty;
-                        totalAmount += subtotal;
+        db.query(`SELECT price, stock FROM product WHERE pid=?`, [item.productId], (err, result) => {
+          if (err) return rej(err);
+          if (result.length === 0) return rej(new Error(`Product ID ${item.productId} not found`));
 
-                        // Attach rate to the item for later insert
-                        item.rate = rate;
+          let product = result[0];
+          if (product.stock < item.qty) return rej(new Error(`Out of stock for Product ID ${item.productId}`));
 
-                        res();
-                    }
-                );
-            });
+          item.rate = product.price; // price per unit
+          totalAmount += product.price * item.qty; // subtotal
+          res();
         });
-        Promise.all(fetchPricesPromises)
-            .then(() => {
-                // Insert into sales table
-                db.query(`INSERT INTO sales (invoiceNo, salesDate, customerId, totalAmount, paymentMode, gstInvoice)VALUES (?, ?, ?, ?, ?, ?)`,
-                    [invoiceNo, salesDate, customerId, totalAmount, paymentMode, gstInvoice], (err, salesResult) => {
-                        if (err) 
-                            return reject(err);
+      });
+    });
 
-                        const saleId = salesResult.insertId;
+    // Step 2: Insert into sales and sales_items
+    Promise.all(fetchPricesPromises)
+      .then(() => {
+        db.query(
+          `INSERT INTO sales (invoiceNo, salesDate, customerId, totalAmount, paymentMode, gstInvoice)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [invoiceNo, salesDate, customerId, totalAmount, paymentMode, gstInvoice],
+          (err, salesResult) => {
+            if (err) return reject(err);
 
-                        // Insert items into sales_items table
-                        let insertItemPromises = items.map(item => {
-                            return new Promise((res, rej) => {
-                                db.query( `INSERT INTO sales_items (salesId, productId, qty, rate) VALUES (?, ?, ?, ?)`,[saleId, item.productId, item.qty, item.rate],
-                                    (err) => {
-                                        if (err) return rej(err);
-                                        res();
-                                    }
-                                );
-                            });
-                        });
+            const saleId = salesResult.insertId;
 
-                        Promise.all(insertItemPromises)
-                            .then(() => {
-                                resolve({ message: "Sale created successfully", saleId, totalAmount });//msg print saelsid and total amount
-                            })
-                            .catch(err => reject(err));
-                    }
+            // Insert each item into sales_items and update stock
+            let tasks = items.map(item => {
+              return new Promise((res, rej) => {
+                db.query(
+                  `INSERT INTO sales_items (salesId, productId, qty, rate) VALUES (?, ?, ?, ?)`,
+                  [saleId, item.productId, item.qty, item.rate],
+                  (err) => {
+                    if (err) return rej(err);
+
+                    // Reduce stock
+                    db.query(
+                      `UPDATE product SET stock = stock - ? WHERE pid=?`,
+                      [item.qty, item.productId],
+                      (err2) => {
+                        if (err2) return rej(err2);
+                        res();
+                      }
+                    );
+                  }
                 );
-            })
-            .catch(err => reject(err));
-    });
+              });
+            });
+
+            Promise.all(tasks)
+              .then(() => {
+                resolve({
+                  message: "Sale created successfully",
+                  saleId,
+                  totalAmount
+                });
+              })
+              .catch(err => reject(err));
+          }
+        );
+      })
+      .catch(err => reject(err));
+  });
 };
-
-exports.viewSales=()=>
-{
-    return new Promise((resolve,reject)=>
-    {
-         db.query(`select s.salesID,s.invoiceNo,s.salesDate,s.totalAmount,s.paymentMode,gstInvoice,c.id as customer_id,c.name as customer_name,
-            c.email,c.company_name,p.pname as product_name ,si.qty,si.rate as product_price from sales s join customer c on s.customerId=c.id 
-            join sales_items si on s.salesID=si.salesID join product p on si.productId=p.pid`,(err,result)=>{
-                if(err)
-                {
-                    reject(err);
-                }
-                else{
-                    resolve(result);
-                }
-            });
-    });
-}
-
-exports.getSalebyID=(id)=>
-{
-    return new Promise((resolve,reject)=>
-    {
-        db.query(`select s.salesID,s.invoiceNo,s.salesDate,s.totalAmount,s.paymentMode,gstInvoice,c.id as customer_id,c.name as customer_name,
-            c.email,c.company_name,p.pname as product_name ,si.qty,si.rate as product_price from sales s join customer c on s.customerId=c.id 
-            join sales_items si on s.salesID=si.salesID join product p on si.productId=p.pid where s.salesId=?`,[id],(err,result)=>{
-                if(err)
-                {
-                    reject(err);
-                }
-                else{
-                    resolve(result);
-                }
-            });
-        
-    });
-}
-exports.updateSales=(id,salesDate,customerId,paymentMode,gstInvoice)=>
-{
-    return new Promise((resolve,reject)=>
-    {
-        db.query(`UPDATE sales 
-             SET  salesDate=?, customerId=?, paymentMode=?, gstInvoice=? 
-             WHERE salesId=?`,[salesDate,customerId,paymentMode,gstInvoice,id],(err,result)=>
-                {
-                    if(err)
-                {
-                    reject(err);
-                }
-                else{
-                    resolve(result);
-                }
-                });
-    });
-}
-
-exports.salesDelete=(id)=>{
- 
-    return new Promise((resolve,reject)=>
-    {
-        db.query(`delete from sales where salesId=?`,[id],(err,result)=>{
-                if(err)
-                {
-                    reject(err);
-                }
-                else{
-                    resolve(result);
-                }
-                });
-    });
-}

@@ -87,3 +87,15 @@ exports.CategoryDelete=(id)=>
     });
 }
 
+exports.categorysearch = (name) => {
+    return new Promise((resolve, reject) => {
+        db.query(
+            "SELECT * FROM category WHERE cname LIKE ?",
+            [`%${name}%`],
+            (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            }
+        );
+    });
+};

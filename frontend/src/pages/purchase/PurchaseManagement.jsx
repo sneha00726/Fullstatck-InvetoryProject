@@ -1,187 +1,328 @@
-import React from "react";
-import PurchaseService from "../../services/PurchaseService";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Table, Button, Form, Modal, Row, Col } from "react-bootstrap";
+import PurchaseService from "../../services/PurchaseService.js";
 
-export default class PurchaseManagement extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      invoiceno: "",
-      purchasedate: "",
-      supplierid: "",
-      paymentmode: "cash",
-      gstinvoice: "",
-      items: [{ productid: "", quantity: "", price: "" }],
-      message: "",
-      validationErrors: [],
-      purchases: [],
-      showView: false,
-    };
-  }
+let PurchaseManagement = () => {
+  let [purchases, setPurchases] = useState([]);
+  let [search, setSearch] = useState("");
 
-  // Add or Update Purchase
-  handleSubmit = async (e) => {
+  // Modal state
+  let [showModal, setShowModal] = useState(false);
+  let [modalData, setModalData] = useState({
+    id: null,
+    invoiceno: "",
+    purchasedate: "",
+    supplierid: "",
+    paymentmode: "",
+    gstinvoice: "",
+    items: [] // ✅ start empty (no invalid row by default)
+  });
+
+  // Fetch all purchases
+  let fetchPurchases = () => {
+    PurchaseService.getAllPurchases()
+      .then(res => setPurchases(res.data))
+      .catch(err => console.error(err));
+  };
+
+  useEffect(() => {
+    fetchPurchases();
+  }, []);
+
+  // Delete purchase
+  let handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this purchase?")) {
+      PurchaseService.deletePurchase(id).then(() => fetchPurchases());
+    }
+  };
+
+  // Search purchase
+  let handleSearch = () => {
+    if (search.trim() === "") fetchPurchases();
+    else {
+      PurchaseService.searchPurchase(search)
+        .then(res => setPurchases(res.data))
+        .catch(err => console.error(err));
+    }
+  };
+
+  // Handle modal input change
+  let handleModalChange = (field, value) => {
+    setModalData({ ...modalData, [field]: value });
+  };
+
+  let handleItemChange = (index, field, value) => {
+    let updatedItems = [...modalData.items];
+    updatedItems[index][field] =
+      field === "quantity" || field === "price" ? Number(value) : value;
+    setModalData({ ...modalData, items: updatedItems });
+  };
+
+  let addItemRow = () =>
+    setModalData({
+      ...modalData,
+      items: [...modalData.items, { productid: "", quantity: 1, price: 1 }]
+    });
+
+  let removeItemRow = (index) =>
+    setModalData({
+      ...modalData,
+      items: modalData.items.filter((_, i) => i !== index)
+    });
+
+  // Open modal for Add or Update
+  let openModal = (purchase = null) => {
+    if (purchase) {
+      setModalData({
+        id: purchase.purchaseid,
+        invoiceno: purchase.invoiceno,
+        purchasedate: purchase.purchasedate,
+        supplierid: purchase.supplierid,
+        paymentmode: purchase.paymentmode,
+        gstinvoice: purchase.gstinvoice,
+        items: purchase.items || []
+      });
+    } else {
+      setModalData({
+        id: null,
+        invoiceno: "",
+        purchasedate: "",
+        supplierid: "",
+        paymentmode: "",
+        gstinvoice: "",
+        items: [] // ✅ no default row
+      });
+    }
+    setShowModal(true);
+  };
+
+  // Submit Add or Update
+  let handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const purchaseData = { 
-        invoiceno: this.state.invoiceno,
-        purchasedate: this.state.purchasedate,
-        supplierid: Number(this.state.supplierid),
-        paymentmode: this.state.paymentmode,
-        gstinvoice: this.state.gstinvoice,
-        items: this.state.items.map(item => ({
-          productid: Number(item.productid),
-          quantity: Number(item.quantity),
-          price: Number(item.price)
-        }))
-      };
-      
-      const res = await PurchaseService.addPurchase(purchaseData);
-      this.setState({ message: res.data.message, validationErrors: [], items: [{ productid: "", quantity: "", price: "" }] });
-      this.loadPurchases();
-    } catch (err) {
-      if (err.response?.data?.validationErrors) {
-        this.setState({ validationErrors: err.response.data.validationErrors });
-      } else {
-        this.setState({ message: "Error: " + (err.response?.data?.message || err.message) });
-      }
+
+    // ✅ validate items
+    const validItems = modalData.items.filter(
+      (item) => item.productid && item.quantity > 0 && item.price > 0
+    );
+
+    if (validItems.length === 0) {
+      alert("Please add at least one valid item with productid, quantity, and price.");
+      return;
     }
+
+    const payload = { ...modalData, items: validItems };
+
+    let apiCall = modalData.id
+      ? PurchaseService.updatePurchase(modalData.id, payload)
+      : PurchaseService.addPurchase(payload);
+
+    apiCall
+      .then(() => {
+        fetchPurchases();
+        setShowModal(false);
+      })
+      .catch((err) => console.error(err));
   };
 
-  // Load purchases from DB
-  loadPurchases = async () => {
-    try {
-      const res = await PurchaseService.viewPurchases();
-      this.setState({ purchases: res.data, showView: true });
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  return (
+    <div>
+      <h3>Purchase Management</h3>
 
-  // Add a new item row
-  addItemRow = () => {
-    this.setState({ items: [...this.state.items, { productid: "", quantity: "", price: "" }] });
-  };
+      {/* Search + Add */}
+      <div className="d-flex mb-3">
+        <Form.Control
+          type="text"
+          placeholder="Search by invoice or supplier"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <Button variant="secondary" className="ms-2" onClick={handleSearch}>
+          Search
+        </Button>
+        <Button variant="primary" className="ms-2" onClick={() => openModal()}>
+          + Add Purchase
+        </Button>
+      </div>
 
-  // Handle item input change
-  handleItemChange = (index, e) => {
-    const items = [...this.state.items];
-    items[index][e.target.name] = e.target.value;
-    this.setState({ items });
-  };
+      {/* Table */}
+      <Table striped bordered>
+        <thead>
+          <tr>
+            <th>Invoice No</th>
+            <th>Supplier</th>
+            <th>Date</th>
+            <th>Total Amount</th>
+            <th>Payment</th>
+            <th>GST</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {purchases.map((p) => (
+            <tr key={p.purchaseid}>
+              <td>{p.invoiceno}</td>
+              <td>{p.suppliername}</td>
+              <td>{p.purchasedate}</td>
+              <td>{p.totalamount}</td>
+              <td>{p.paymentmode}</td>
+              <td>{p.gstinvoice}</td>
+              <td>
+                <Button
+                  variant="warning"
+                  size="sm"
+                  onClick={() => openModal(p)}
+                >
+                  Edit
+                </Button>{" "}
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => handleDelete(p.purchaseid)}
+                >
+                  Delete
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
 
-  render() {
-    return (
-      <div className="container mt-3">
-        {/* Navigation */}
-        <nav className="navbar navbar-expand-lg bg-light mb-4">
-          <div className="container-fluid">
-            <a className="navbar-brand">Purchase</a>
-            <div className="collapse navbar-collapse">
-              <ul className="navbar-nav">
-                <li className="nav-item"><Link to="/dashboard" className="nav-link">Dashboard</Link></li>
-                <li className="nav-item"><button className="btn btn-link nav-link" onClick={this.loadPurchases}>View Purchases</button></li>
-              </ul>
-            </div>
-          </div>
-        </nav>
+      {/* Add/Update Modal */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {modalData.id ? "Update Purchase" : "Add Purchase"}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleSubmit}>
+            <Row className="mb-3">
+              <Col>
+                <Form.Label>Invoice No</Form.Label>
+                <Form.Control
+                  value={modalData.invoiceno}
+                  onChange={(e) =>
+                    handleModalChange("invoiceno", e.target.value)
+                  }
+                  required
+                />
+              </Col>
+              <Col>
+                <Form.Label>Purchase Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={modalData.purchasedate}
+                  onChange={(e) =>
+                    handleModalChange("purchasedate", e.target.value)
+                  }
+                  required
+                />
+              </Col>
+            </Row>
 
-        {/* Add Purchase Form */}
-        <div className="card p-3 mb-4">
-          <h4>Add Purchase</h4>
-          {this.state.validationErrors.length > 0 && (
-            <div className="alert alert-danger">
-              <ul>
-                {this.state.validationErrors.map((err, idx) => <li key={idx}>{err}</li>)}
-              </ul>
-            </div>
-          )}
-          {this.state.message && <div className="alert alert-success">{this.state.message}</div>}
-          <form onSubmit={this.handleSubmit}>
-            <div className="row mb-2">
-              <div className="col-md-4">
-                <input type="text" className="form-control" placeholder="Invoice No" value={this.state.invoiceno} onChange={e => this.setState({ invoiceno: e.target.value })} />
-              </div>
-              <div className="col-md-4">
-                <input type="date" className="form-control" value={this.state.purchasedate} onChange={e => this.setState({ purchasedate: e.target.value })} />
-              </div>
-              <div className="col-md-4">
-                <input type="number" className="form-control" placeholder="Supplier ID" value={this.state.supplierid} onChange={e => this.setState({ supplierid: e.target.value })} />
-              </div>
-            </div>
-            <div className="row mb-2">
-              <div className="col-md-4">
-                <select className="form-control" value={this.state.paymentmode} onChange={e => this.setState({ paymentmode: e.target.value })}>
+            <Row className="mb-3">
+              <Col>
+                <Form.Label>Supplier ID</Form.Label>
+                <Form.Control
+                  value={modalData.supplierid}
+                  onChange={(e) =>
+                    handleModalChange("supplierid", e.target.value)
+                  }
+                  required
+                />
+              </Col>
+              <Col>
+                <Form.Label>Payment Mode</Form.Label>
+                <Form.Select
+                  value={modalData.paymentmode}
+                  onChange={(e) =>
+                    handleModalChange("paymentmode", e.target.value)
+                  }
+                  required
+                >
+                  <option value="">Select</option>
                   <option value="cash">Cash</option>
-                  <option value="upi">UPI</option>
                   <option value="card">Card</option>
-                </select>
-              </div>
-              <div className="col-md-8">
-                <input type="text" className="form-control" placeholder="GST Invoice" value={this.state.gstinvoice} onChange={e => this.setState({ gstinvoice: e.target.value })} />
-              </div>
-            </div>
+                  <option value="upi">UPI</option>
+                </Form.Select>
+              </Col>
+            </Row>
 
-            {/* Purchase Items */}
+            <Form.Label>GST Invoice</Form.Label>
+            <Form.Control
+              value={modalData.gstinvoice}
+              onChange={(e) =>
+                handleModalChange("gstinvoice", e.target.value)
+              }
+            />
+
             <h5 className="mt-3">Items</h5>
-            {this.state.items.map((item, index) => (
-              <div className="row mb-2" key={index}>
-                <div className="col-md-4">
-                  <input type="number" name="productid" className="form-control" placeholder="Product ID" value={item.productid} onChange={(e) => this.handleItemChange(index, e)} />
-                </div>
-                <div className="col-md-4">
-                  <input type="number" name="quantity" className="form-control" placeholder="Quantity" value={item.quantity} onChange={(e) => this.handleItemChange(index, e)} />
-                </div>
-                <div className="col-md-4">
-                  <input type="number" name="price" className="form-control" placeholder="Price" value={item.price} onChange={(e) => this.handleItemChange(index, e)} />
-                </div>
-              </div>
-            ))}
-            <button type="button" className="btn btn-secondary mb-3" onClick={this.addItemRow}>Add Item</button>
-            <br />
-            <button type="submit" className="btn btn-success">Save Purchase</button>
-          </form>
-        </div>
-
-        {/* View Purchases Table */}
-        {this.state.showView && (
-          <div className="card p-3 mt-4">
-            <h4>All Purchases</h4>
-            <table className="table table-bordered table-striped">
-              <thead className="table-dark">
+            <Table striped bordered>
+              <thead>
                 <tr>
-                  <th>Invoice No</th>
-                  <th>Date</th>
-                  <th>Supplier ID</th>
-                  <th>Payment</th>
-                  <th>GST</th>
-                  <th>Total Amount</th>
-                  <th>Items</th>
+                  <th>Product ID</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {this.state.purchases.map((purchase) => (
-                  <tr key={purchase.purchaseid}>
-                    <td>{purchase.invoiceno}</td>
-                    <td>{purchase.purchasedate}</td>
-                    <td>{purchase.supplierid}</td>
-                    <td>{purchase.paymentmode}</td>
-                    <td>{purchase.gstinvoice}</td>
-                    <td>{purchase.totalamount}</td>
+                {modalData.items.map((item, i) => (
+                  <tr key={i}>
                     <td>
-                      {purchase.items.map((it, idx) => (
-                        <div key={idx}>
-                          ProductID: {it.productid}, Qty: {it.quantity}, Price: {it.price}
-                        </div>
-                      ))}
+                      <Form.Control
+                        type="number"
+                        value={item.productid}
+                        onChange={(e) =>
+                          handleItemChange(i, "productid", e.target.value)
+                        }
+                        required
+                      />
+                    </td>
+                    <td>
+                      <Form.Control
+                        type="number"
+                        value={item.quantity}
+                        min={1}
+                        onChange={(e) =>
+                          handleItemChange(i, "quantity", e.target.value)
+                        }
+                      />
+                    </td>
+                    <td>
+                      <Form.Control
+                        type="number"
+                        value={item.price}
+                        min={1}
+                        onChange={(e) =>
+                          handleItemChange(i, "price", e.target.value)
+                        }
+                      />
+                    </td>
+                    <td>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => removeItemRow(i)}
+                      >
+                        Remove
+                      </Button>
                     </td>
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    );
-  }
-}
+            </Table>
+            <Button variant="secondary" onClick={addItemRow}>
+              + Add Item
+            </Button>
+            <Button type="submit" className="ms-2">
+              {modalData.id ? "Update" : "Save"}
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
+    </div>
+  );
+};
+
+export default PurchaseManagement;

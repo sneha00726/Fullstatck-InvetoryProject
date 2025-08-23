@@ -12,12 +12,12 @@ exports.AddCustomer=(req,res)=>
         promise.then((result)=>
         {
            
-            res.send("customer saved successfully...");
+             res.status(201).json({ message: "Customer saved successfully", data: result });
             
         }).catch((err)=>
         {
             
-            res.send("customer not saved..."+err);
+            res.status(500).json({ message: "Customer not saved maybe duplicate data", error: err });
         });
 }
 // View all customers
@@ -26,12 +26,12 @@ exports.viewAllCustomer=(req,res)=>{
      promise.then((result)=>
         {
            
-            res.send(result);
+           res.status(200).json(result);
             
         }).catch((err)=>
         {
             
-            res.send("customer not saved..."+err);
+             res.status(500).json({ message: "Error fetching customers", error: err });
         });
 
 }
@@ -47,48 +47,59 @@ exports.viewAllCustomer=(req,res)=>{
             } else {
                 res.status(200).send(result);// Send customer data
             }
-           // res.send(result);
+           
             
         }).catch((err)=>
         {
             
-            res.send("customer not found .."+err);
+          res.status(500).json({ message: "Error fetching customers", error: err });
         });
 
     }
     // Update customer by ID
-    exports.UpdateCustomer=(req,res)=>
-    {
-        let id=req.params.id;
-        let{name,email,phone_no,company_name,address,gstNumber}=req.body;
-        let promise=model_cust.UpdateByid(id,name,email,phone_no,company_name,address,gstNumber);
-        promise.then((result)=>
-        {
-           
-            res.send("done...");
-            
-        }).catch((err)=>
-        {
-            
-            res.send("invalid data .."+err);
-        });
+    // Update customer by ID
+exports.UpdateCustomer = (req, res) => {
+    let id = req.params.id;
+    let { name, email, phone_no, company_name, address, gstNumber } = req.body;
 
-    }
-    // delete customer by ID
-exports.CustomerDelete=(req,res)=>
-{
-    let id=req.params.id;
-        
-        let promise=model_cust.DeleteByID(id);
-        promise.then((result)=>
-        {
-           
-            res.send("deleted ...");
-            
-        }).catch((err)=>
-        {
-            
-            res.send("invalid data .."+err);
-        });
+    let promise = model_cust.UpdateByid(id, name, email, phone_no, company_name, address, gstNumber);
 
-}
+    promise.then((result) => {
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Customer not found for ID: " + id });
+        }
+        res.status(200).json({ message: "Customer updated successfully" });
+    }).catch((err) => {
+        res.status(500).json({ message: "Error updating customer", error: err });
+    });
+};
+
+// Delete customer by ID
+exports.CustomerDelete = (req, res) => {
+    let id = req.params.id;
+
+    let promise = model_cust.DeleteByID(id);
+    promise.then((result) => {
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Customer not found for ID: " + id });
+        }
+        res.status(200).json({ message: "Customer deleted successfully" });
+    }).catch((err) => {
+        res.status(500).json({ message: "Error deleting customer", error: err });
+    });
+};
+
+exports.CustSearch = (req, res) => {
+    let name = req.params.name; //
+    let promise = model_cust.searchCustomer(name);
+
+    promise.then((result) => {
+        if (result.length > 0) {
+            res.status(200).json(result);
+        } else {
+            res.status(404).json({ message: "No purchase found" });
+        }
+    }).catch((err) => {
+        res.status(500).json({ error: err.message });
+    });
+};

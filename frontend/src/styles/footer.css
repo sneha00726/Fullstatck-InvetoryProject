@@ -1,0 +1,90 @@
+/* footer.css */
+
+.footer-container {
+  margin-top: 40px;
+}
+
+.footer-main {
+  background-color: #3e4551;
+  color: white;
+  padding: 20px 0;
+}
+
+.footer-main h5 {
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.footer-main p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.footer-links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-links ul li {
+  margin-bottom: 10px;
+}
+
+.footer-links ul li a {
+  text-decoration: none;
+  color: #ffffff;
+  transition: color 0.3s ease;
+}
+
+.footer-links ul li a:hover {
+  color: #ddd;
+}
+
+.footer-register {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.footer-register button {
+  border: 1px solid white;
+  color: white;
+  padding: 6px 15px;
+  border-radius: 20px;
+  background: transparent;
+  transition: 0.3s ease;
+}
+
+.footer-register button:hover {
+  background: white;
+  color: #3e4551;
+}
+
+.footer-social {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.footer-social a {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid white;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  margin: 5px;
+  color: white;
+  transition: 0.3s ease;
+}
+
+.footer-social a:hover {
+  background: white;
+  color: #3e4551;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+}
