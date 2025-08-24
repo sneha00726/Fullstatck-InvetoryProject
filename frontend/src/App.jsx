@@ -22,8 +22,6 @@ import AboutSection from "./pages/home/aboutSection.jsx";
 import UserManage from "./pages/userManage.jsx";
 import AddPurchase from "./pages/Purchase.jsx";
 
-import AddSale from "./pages/sales/AddSales.jsx";
-
 import Dashboard from "./pages/dashborad/DashBorad.jsx";
 
 import PurchaseManagement from "./pages/purchase/PurchaseManagement.jsx";
@@ -72,7 +70,6 @@ export default class App extends React.Component{
     <Route path="/about" element={<AboutSection/>}/>
     <Route path="/footer" element={<Footer/>}/>
     <Route path="/AddSupplier" element={<AddSupplier/>}/>
-    <Route path="/viewsupplier" element={<ViewSupplier/>}/>
 
    </Routes>
    </BrowserRouter>

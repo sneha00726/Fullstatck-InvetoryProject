@@ -1,15 +1,7 @@
 import axios from "axios";
-
-// Helper to get JWT token from localStorage
-const getToken = () => localStorage.getItem("token");
-
 class PurchaseService {
-  // Headers with token
-  getAuthHeaders() {
-    return { headers: { Authorization: `Bearer ${getToken()}` } };
-  }
 
-  // Create Purchase (Admin only)
+  // Add Purchase
   addPurchase(purchaseData) {
     return axios.post(
       "http://localhost:3000/api/purchases/add",
@@ -18,7 +10,7 @@ class PurchaseService {
     );
   }
 
-  // Read all Purchases (Admin only)
+  // Get all Purchases
   getAllPurchases() {
     return axios.get(
       "http://localhost:3000/api/purchases/view",
@@ -26,7 +18,7 @@ class PurchaseService {
     );
   }
 
-  // Get purchase by ID (Admin only)
+  // Get Purchase by ID
   getPurchaseById(id) {
     return axios.get(
       `http://localhost:3000/api/purchases/${id}`,
@@ -34,24 +26,24 @@ class PurchaseService {
     );
   }
 
-  // Update purchase (Admin only)
-  updatePurchase(purchaseId, purchaseData) {
+  // Update Purchase
+  updatePurchase(id, purchaseData) {
     return axios.put(
-      `http://localhost:3000/api/purchases/update/${purchaseId}`,
+      `http://localhost:3000/api/purchases/update/${id}`,
       purchaseData,
       this.getAuthHeaders()
     );
   }
 
-  // Delete purchase (Admin only)
-  deletePurchase(purchaseId) {
+  // Delete Purchase
+  deletePurchase(id) {
     return axios.delete(
-      `http://localhost:3000/api/purchases/delete/${purchaseId}`,
+      `http://localhost:3000/api/purchases/delete/${id}`,
       this.getAuthHeaders()
     );
   }
 
-  // Search purchases (Admin only)
+  // Search Purchase
   searchPurchase(name) {
     return axios.get(
       `http://localhost:3000/api/purchases/search/${name}`,

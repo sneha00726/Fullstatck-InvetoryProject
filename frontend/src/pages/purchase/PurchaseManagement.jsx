@@ -2,77 +2,76 @@ import React, { useState, useEffect } from "react";
 import { Table, Button, Form, Modal, Row, Col } from "react-bootstrap";
 import PurchaseService from "../../services/PurchaseService.js";
 
-let PurchaseManagement = () => {
-  let [purchases, setPurchases] = useState([]);
-  let [search, setSearch] = useState("");
+const PurchaseManagement = () => {
+  const [purchases, setPurchases] = useState([]);
+  const [search, setSearch] = useState("");
 
   // Modal state
-  let [showModal, setShowModal] = useState(false);
-  let [modalData, setModalData] = useState({
+  const [showModal, setShowModal] = useState(false);
+  const [modalData, setModalData] = useState({
     id: null,
     invoiceno: "",
     purchasedate: "",
     supplierid: "",
     paymentmode: "",
     gstinvoice: "",
-    items: [] // ✅ start empty (no invalid row by default)
+    items: [],
   });
 
-  // Fetch all purchases
-  let fetchPurchases = () => {
+  // Fetch purchases
+  const fetchPurchases = () => {
     PurchaseService.getAllPurchases()
-      .then(res => setPurchases(res.data))
-      .catch(err => console.error(err));
+      .then((res) => setPurchases(res.data))
+      .catch((err) => console.error(err));
   };
 
   useEffect(() => {
     fetchPurchases();
   }, []);
 
-  // Delete purchase
-  let handleDelete = (id) => {
+  // Delete Purchase
+  const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this purchase?")) {
       PurchaseService.deletePurchase(id).then(() => fetchPurchases());
     }
   };
 
-  // Search purchase
-  let handleSearch = () => {
-    if (search.trim() === "") fetchPurchases();
-    else {
-      PurchaseService.searchPurchase(search)
-        .then(res => setPurchases(res.data))
-        .catch(err => console.error(err));
-    }
+  // Search Purchase
+  const handleSearch = () => {
+    if (!search.trim()) return fetchPurchases();
+    PurchaseService.searchPurchase(search)
+      .then((res) => setPurchases(res.data))
+      .catch((err) => console.error(err));
   };
 
-  // Handle modal input change
-  let handleModalChange = (field, value) => {
+  // Modal Input change
+  const handleModalChange = (field, value) =>
     setModalData({ ...modalData, [field]: value });
-  };
 
-  let handleItemChange = (index, field, value) => {
-    let updatedItems = [...modalData.items];
+  const handleItemChange = (index, field, value) => {
+    const updatedItems = [...modalData.items];
     updatedItems[index][field] =
       field === "quantity" || field === "price" ? Number(value) : value;
     setModalData({ ...modalData, items: updatedItems });
   };
 
-  let addItemRow = () =>
+  const addItemRow = () =>
     setModalData({
       ...modalData,
-      items: [...modalData.items, { productid: "", quantity: 1, price: 1 }]
+      items: [...modalData.items, { productid: "", quantity: 1, price: 1 }],
     });
 
-  let removeItemRow = (index) =>
+  const removeItemRow = (index) =>
     setModalData({
       ...modalData,
-      items: modalData.items.filter((_, i) => i !== index)
+      items: modalData.items.filter((_, i) => i !== index),
     });
 
-  // Open modal for Add or Update
-  let openModal = (purchase = null) => {
+  // Open Modal
+  const openModal = (purchase = null) => {
     if (purchase) {
+      // Map items for modal
+      const items = purchase.items || purchase.products || [];
       setModalData({
         id: purchase.purchaseid,
         invoiceno: purchase.invoiceno,
@@ -80,7 +79,12 @@ let PurchaseManagement = () => {
         supplierid: purchase.supplierid,
         paymentmode: purchase.paymentmode,
         gstinvoice: purchase.gstinvoice,
-        items: purchase.items || []
+        items: items.map((i) => ({
+          id: i.itemid,
+          productid: i.productid,
+          quantity: i.quantity,
+          price: i.price,
+        })),
       });
     } else {
       setModalData({
@@ -90,29 +94,23 @@ let PurchaseManagement = () => {
         supplierid: "",
         paymentmode: "",
         gstinvoice: "",
-        items: [] // ✅ no default row
+        items: [],
       });
     }
     setShowModal(true);
   };
 
-  // Submit Add or Update
-  let handleSubmit = (e) => {
+  // Submit Add/Update
+  const handleSubmit = (e) => {
     e.preventDefault();
-
-    // ✅ validate items
     const validItems = modalData.items.filter(
-      (item) => item.productid && item.quantity > 0 && item.price > 0
+      (i) => i.productid && i.quantity > 0 && i.price > 0
     );
-
-    if (validItems.length === 0) {
-      alert("Please add at least one valid item with productid, quantity, and price.");
-      return;
-    }
+    if (!validItems.length) return alert("Add at least one valid item.");
 
     const payload = { ...modalData, items: validItems };
 
-    let apiCall = modalData.id
+    const apiCall = modalData.id
       ? PurchaseService.updatePurchase(modalData.id, payload)
       : PurchaseService.addPurchase(payload);
 
@@ -187,7 +185,7 @@ let PurchaseManagement = () => {
         </tbody>
       </Table>
 
-      {/* Add/Update Modal */}
+      {/* Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
@@ -312,6 +310,7 @@ let PurchaseManagement = () => {
                 ))}
               </tbody>
             </Table>
+
             <Button variant="secondary" onClick={addItemRow}>
               + Add Item
             </Button>

@@ -1,11 +1,10 @@
 let express=require("express");
-
 let bodyparser=require("body-parser");
 let cookieparser=require("cookie-parser");
 let path=require("path");
 let con=require("../db.js");
 let app=express();
-let router=require(".//routes/router.js");
+let router=require("./routes/router.js");
 let cors = require("cors"); 
 // Enable CORS
 app.use(cors({ origin: "http://localhost:5173" })); // for your React app
