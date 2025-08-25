@@ -52,12 +52,12 @@ export default class App extends React.Component{
       <Route path="addcustomer" element={<AddCustomer/>}/>
      
        {/* Purchase */}
-        <Route path="purchases" element={<PurchaseManagement />} />
+      <Route path="purchases" element={<PurchaseManagement />} />
 
       {/* Sales */}
       <Route path="addsales" element={<AddSale/>}/>
       <Route path="user" element={<UserManage/>}/>
-       <Route path="purchases" element={<AddPurchase/>}/>
+      <Route path="purchases" element={<AddPurchase/>}/>
 
       {/*  Default dashboard content */}
       <Route index element={<h2>Welcome to Dashboard </h2>}/>

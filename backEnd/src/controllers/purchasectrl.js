@@ -1,95 +1,88 @@
-let purmodel=require("../models/purchasemodel.js");
+let purModel=require("../models/purchasemodel.js");
 let {validatePurchase}=require("../validation/purchasevalidation.js")
 
-exports.addPurchase=(req,res)=>
-{
-        let {invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items}=req.body;
+exports.addPurchase = async (req, res) => {
+  let { invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items } = req.body;
 
-        let errors=validatePurchase(invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items);
+  let errors = validatePurchase(invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items);
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
 
-        if(errors.length)
-        {
-            return res.status(400).json({errors});
-        }
-
-        let promise=purmodel.addPurchase(invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items);
-        
-        promise.then((result)=>
-        {
-            res.send("Purchase added successfully");
-        }).catch((error)=>
-        {
-            console.error("Error while saving purchases", error); 
-            res.send("Purchase not saved: " + error.message);
-        });
-}
-
-exports.viewPurchases=(req,res)=>{
-    let promise = purmodel.viewPurchases();
-
-    promise.then((result) => 
-    {
-        res.send(result);
-    }).catch((error)=> 
-    {
-        res.send("Error while fetching purchases");
-    });
-}
-
-exports.getPurchaseById=(req,res)=>
-{
-    let id = req.params.id;
-    let promise = purmodel.getPurchaseById(id);
-
-    promise.then((result)=>
-    {
-        res.send(result);
-    }).catch((error)=> 
-    {
-        res.json({ error: "Error while fetching purchase by ID" });
-    });
-}
-
-exports.updatePurchaseById=(req,res)=>
-{
-    let id=req.params.id;
-    let purchaseData=req.body;
-
-    let promise=purmodel.updatePurchaseById(id,purchaseData);
-    promise.then((result)=>
-    {
-        res.send({message: "Purchase updated successfully"});
-    }).catch((error)=> 
-    {
-        res.json({error: "Error while updating purchase"});
-    });
-}
-
-exports.deletePurchaseById=(req, res)=>{
-    let id = req.params.id;
-
-    let promise=purmodel.deletePurchaseById(id);
-    promise.then((result)=> 
-    {
-        res.send({message: "Purchase deleted successfully"});
-    }).catch((error) => 
-    {
-        res.json({ error: "Error while deleting purchase" });
-    });
-}
-exports.purchasesearch = (req, res) => {
-    let name = req.params.name; //
-    let promise = purmodel.searchpurchase(name);
-
-    promise.then((result) => {
-        if (result.length > 0) {
-            res.status(200).json(result);
-        } else {
-            res.status(404).json({ message: "No purchase found" });
-        }
-    }).catch((err) => {
-        res.status(500).json({ error: err.message });
-    });
+  try {
+    let result = await purModel.addPurchase({ invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items });
+    res.status(201).json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "Internal Server Error" });
+  }
 };
 
+exports.viewPurchases = async (req, res) => {
+  try {
+    let purchases = await purModel.viewPurchases();
+    res.json(purchases);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch purchases" });
+  }
+};
 
+exports.getPurchaseById = async (req, res) => {
+  try {
+    let id = req.params.id;
+    let purchase = await purModel.getPurchaseById(id);
+
+    if (!purchase || purchase.length === 0) {
+      return res.status(404).json({ error: "Purchase not found" });
+    }
+
+    res.json(purchase);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch purchase" });
+  }
+};
+
+exports.updatePurchaseById = async (req, res) => {
+  try {
+    let id = req.params.id;
+    let purchaseData = req.body;
+
+    // optionally validate purchaseData.items here if you want
+
+    let result = await purModel.updatePurchaseById(id, purchaseData);
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "Failed to update purchase" });
+  }
+};
+
+exports.deletePurchaseById = async (req, res) => {
+  try {
+    let id = req.params.id;
+    await purmodel.deletePurchaseById(id);
+    res.json({ message: "Purchase deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete purchase" });
+  }
+};
+
+exports.purchasesearch = async (req, res) => {
+  try {
+    let searchTerm = req.params.name;
+    if (!searchTerm) {
+      return res.status(400).json({ error: "Search term is required" });
+    }
+    let results = await purModel.searchPurchase(searchTerm);
+    if (results.length === 0) {
+      return res.status(404).json({ message: "No matching purchases found" });
+    }
+    res.json(results);
+  } catch (err) {
+    console.error("Purchase search error:", err);
+    res.status(500).json({ error: "Failed to search purchases" });
+  }
+};

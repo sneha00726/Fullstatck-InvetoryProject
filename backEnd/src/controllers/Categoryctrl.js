@@ -2,12 +2,12 @@ let model_cat=require("../models/Categorymodel.js");
 
 exports.createCategory=(req,res)=>
 {
-    let {name}=req.body;
-     if (!name) {
+    let {cname}=req.body;
+     if (!cname) {
         return res.status(400).json({ message: "Category name is required" });  //if name is empty
     }
    // console.log("im in controller");
-    let promise=model_cat.CreateCategoryAdd(name);
+    let promise=model_cat.CreateCategoryAdd(cname);
     promise.then((result)=>
     {
         //console.log("data save");
@@ -17,7 +17,6 @@ exports.createCategory=(req,res)=>
         res.status(409).json({ message: "data is not save duplicate entry not allowed" });
        
     });
-
 }
 
 exports.getAllCategory=(req,res)=>
@@ -58,12 +57,12 @@ exports.UpdateCategory=(req,res)=>
 {
     //console.log("PUT update route called");
     let id=req.params.id;
-    let {name}=req.body;
-    if (!name) {
+    let {cname}=req.body;
+    if (!cname) {
         return res.status(400).json({ message: "Category name is required to update" });
     }
 
-    let promsie=model_cat.CategoryUpdate(id,name);
+    let promsie=model_cat.CategoryUpdate(id,cname);
     promsie.then((result)=>
     {
         if(result.affectedRows === 0)
