@@ -90,7 +90,7 @@ exports.deleteProdById=(id)=>{
 exports.searchProdByName = (name) => {
     return new Promise((resolve, reject) => {
         db.query(
-            "select * from product where pname like ?",
+            "SELECT * FROM purchase WHERE pname LIKE ?",
             [`%${name}%`],
             (err, result) => {
                 if (err) reject(err);
