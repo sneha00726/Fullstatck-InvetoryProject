@@ -1,24 +1,32 @@
 let purmodel=require("../models/purchasemodel.js");
-let {validatePurchase}=require("../validation/purchasevalidation.js")
+//let {validatePurchase}=require("../validation/purchasevalidation.js")
+exports.addPurchase = (req, res) => {
+    let { invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items } = req.body;
 
-exports.addPurchase=(req,res)=>
-{
-        let {invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, items}=req.body;
-        let errors=validatePurchase(invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, items);
-        if(errors.length)
-        {
-            return res.status(400).json({errors});
-        }
-        let promise=purmodel.addPurchase(invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, items);
-        promise.then((result)=>
-        {
-            res.send("Purchase added successfully");
-        }).catch((error)=>
-        {
-            console.error("Error while saving purchases", error); 
-            res.send("Purchase not saved: " + error.message);
-        });
-}
+    // Calculate totalamount here
+    let totalamount = 0;
+    if (items && Array.isArray(items)) {
+        totalamount = items.reduce((sum, item) => sum + (item.qty * item.price), 0);
+    }
+
+    // Pass as object
+    let promise = purmodel.addPurchase({
+        invoiceno,
+        purchasedate,
+        supplierid,
+        totalamount,
+        paymentmode,
+        gstinvoice,
+        items
+    });
+
+    promise.then((result) => {
+        res.json({ message: "Purchase added successfully", purchaseId: result.purchaseId, totalamount });
+    }).catch((error) => {
+        console.error("Error while saving purchases", error);
+        res.status(500).json({ message: "Purchase not saved", error: error.message });
+    });
+};
 
 exports.viewPurchases=(req,res)=>{
     let promise = purmodel.viewPurchases();

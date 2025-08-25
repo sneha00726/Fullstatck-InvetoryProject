@@ -34,13 +34,13 @@ export default class AddCategory extends React.Component {
     const { name, editId } = this.state;
 
     if (!name.trim()) {
-      this.setState({ msg: "⚠ Category name is required" });
+      this.setState({ msg: " Category name is required" });
       return;
     }
 
     if (editId) {
       // Update category
-      CategoryService.updateCategory(editId, { name }) // use 'name' not 'cname'
+      CategoryService.updateCategory(editId, { name })
         .then((res) => {
           this.setState({
             msg: res.data.message,
@@ -50,15 +50,15 @@ export default class AddCategory extends React.Component {
           });
           this.loadCategories();
         })
-        .catch(() => this.setState({ msg: "❌ Update failed" }));
+        .catch(() => this.setState({ msg: "Update failed" }));
     } else {
       // Add category
-      CategoryService.saveCategory({ name }) // use 'name' not 'cname'
+      CategoryService.saveCategory({ name }) 
         .then((res) => {
           this.setState({ msg: res.data.message, name: "", showForm: false });
           this.loadCategories();
         })
-        .catch(() => this.setState({ msg: "❌ Add failed" }));
+        .catch(() => this.setState({ msg: " Add failed" }));
     }
   };
 
@@ -66,10 +66,10 @@ export default class AddCategory extends React.Component {
     if (window.confirm("Are you sure you want to delete this category?")) {
       CategoryService.delCat(catId)
         .then(() => {
-          this.setState({ msg: "✅ Category deleted successfully" });
+          this.setState({ msg: " Category deleted successfully" });
           this.loadCategories();
         })
-        .catch(() => this.setState({ msg: "❌ Delete failed" }));
+        .catch(() => this.setState({ msg: " Delete failed" }));
     }
   };
 

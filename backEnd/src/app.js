@@ -12,7 +12,7 @@ app.use(cors({ origin: "http://localhost:5173" })); // for your React app
 app.use(express.static("public"));
 app.use(express.json());
 app.use(bodyparser.urlencoded({extended:true}));
-app.use(cookieparser("1233456789@$"));
+//app.use(cookieparser("1233456789@$"));
 
 
 app.use("/",router);

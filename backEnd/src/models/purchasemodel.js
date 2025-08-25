@@ -1,7 +1,12 @@
 let db = require("../../db.js");
 
-exports.addPurchase = ({ invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, items }) => {
+exports.addPurchase = ({ invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items }) => {
   return new Promise((resolve, reject) => {
+    // Calculate total amount from items
+    let totalamount = 0;
+    if (items && items.length > 0) {
+      totalamount = items.reduce((sum, item) => sum + (item.qty * item.price), 0);
+    }
 
     db.query(
       "INSERT INTO purchase (invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice) VALUES (?, ?, ?, ?, ?, ?)",
@@ -11,7 +16,8 @@ exports.addPurchase = ({ invoiceno, purchasedate, supplierid, totalamount, payme
 
         const purchaseId = result1.insertId;
 
-        if (!items || items.length === 0) return resolve({ message: "Purchase added (no items)", purchaseId });
+        if (!items || items.length === 0) 
+          return resolve({ message: "Purchase added (no items)", purchaseId, totalamount });
 
         const itemsSql = "INSERT INTO purchase_items (purchaseid, productid, quantity, price) VALUES ?";
         const itemValues = items.map(item => [purchaseId, item.productId, item.qty, item.price]);
@@ -30,13 +36,14 @@ exports.addPurchase = ({ invoiceno, purchasedate, supplierid, totalamount, payme
           });
 
           Promise.all(updateStockPromises)
-            .then(() => resolve({ message: "Purchase added successfully", purchaseId }))
+            .then(() => resolve({ message: "Purchase added successfully", purchaseId, totalamount }))
             .catch(err => reject(err));
         });
       }
     );
   });
 };
+
 
 
 exports.viewPurchases=()=>

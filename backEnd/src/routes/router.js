@@ -68,7 +68,7 @@ router.get("/api/sales/view",VerifyToken, authorizeRoles("admin","user"),salesct
 router.get("/api/sales/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.GetbyIDSales);
 router.put("/api/sales/update/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.updateSalesById);
 router.delete("/api/sales/delete/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.deleteSalesById);
-router.get("/api/sales/search/:name", VerifyToken, authorizeRoles("admin","user"),salesctrl.salesSearch);
+router.get("/api/sales/search/:invoice", VerifyToken, authorizeRoles("admin","user"),salesctrl.salesSearch);
 
 //usermange
 router.post("/api/users/add", VerifyToken, authorizeRoles("admin"), userctr.addUser);

@@ -177,7 +177,7 @@ export default class AddCustomer extends React.Component {
               </tr>
             )) : (
               <tr>
-                <td colSpan="8" className="text-danger fw-bold">🚫 No customers found</td>
+                <td colSpan="8" className="text-danger fw-bold">No customers found</td>
               </tr>
             )}
           </tbody>

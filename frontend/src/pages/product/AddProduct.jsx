@@ -34,7 +34,7 @@ export default class AddProduct extends React.Component {
       .then((res) => this.setState({ categories: res.data }))
       .catch((err) => console.error(err));
 
-    //  Suppliers (handles API shape)
+    //  Suppliers 
     SupplierService.getSupplier()
       .then((res) => {
         console.log("Supplier API Response:", res.data);
@@ -57,9 +57,8 @@ export default class AddProduct extends React.Component {
       .catch((err) => console.error(err));
   };
 
-// ✅ Handles both add and update product
-sendProdToServer = (e) => {
-  e.preventDefault();
+//  Handles both add and update product
+sendProdToServer = (e) => {e.preventDefault();
 
   const { pid, pname, price, supplier_id, cid, stock } = this.state;
 
@@ -86,11 +85,11 @@ sendProdToServer = (e) => {
         this.setState({ msg: " Error updating product" });
       });
   } else {
-    // 🔹 Add new product
+    // Add new product
     ProductService.saveProduct(productObj)   
       .then(() => {
         this.setState({
-          msg: "✅ Product added successfully!",
+          msg: " Product added successfully!",
           pname: "",
           price: "",
           supplier_id: "",

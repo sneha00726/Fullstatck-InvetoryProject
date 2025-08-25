@@ -14,7 +14,7 @@ exports.VerifyToken=(req,res,next)=>
         try{
             let decode=jwt.verify(token,process.env.secretKey);
             req.user=decode;
-            console.log("the decode is :",req.user);
+            //console.log("the decode is :",req.user);
              //console.log("The decoded token payload is:", req.user);
             next();
         }catch(err)

@@ -6,7 +6,7 @@ exports.createSale = (invoiceNo, salesDate, customerId, items, paymentMode, gstI
   return new Promise((resolve, reject) => {
     let totalAmount = 0;
 
-    // Step 1: Validate products and calculate total
+    // Validate products and calculate total
     let fetchPricesPromises = items.map(item => {
       return new Promise((res, rej) => {
         db.query(`SELECT price, stock FROM product WHERE pid=?`, [item.productId], (err, result) => {
@@ -23,7 +23,7 @@ exports.createSale = (invoiceNo, salesDate, customerId, items, paymentMode, gstI
       });
     });
 
-    // Step 2: Insert into sales and sales_items
+    //  Insert into sales and sales_items
     Promise.all(fetchPricesPromises)
       .then(() => {
         db.query(
@@ -109,24 +109,29 @@ exports.getSalebyID=(id)=>
         
     });
 }
-exports.updateSales=(id,salesDate,customerId,paymentMode,gstInvoice)=>
-{
-    return new Promise((resolve,reject)=>
-    {
-        db.query(`UPDATE sales 
-             SET  salesDate=?, customerId=?, paymentMode=?, gstInvoice=? 
-             WHERE salesId=?`,[salesDate,customerId,paymentMode,gstInvoice,id],(err,result)=>
-                {
-                    if(err)
-                {
-                    reject(err);
-                }
-                else{
-                    resolve(result);
-                }
-                });
-    });
-}
+exports.updateSales = (id, salesDate, customerId, paymentMode, gstInvoice, items) => {
+  return new Promise((resolve, reject) => {
+    db.query(
+      `UPDATE sales SET salesDate=?, customerId=?, paymentMode=?, gstInvoice=? WHERE salesId=?`,
+      [salesDate, customerId, paymentMode, gstInvoice, id],
+      (err, result) => {
+        if (err) return reject(err);
+
+        // delete old items and insert new
+        db.query(`DELETE FROM sales_items WHERE salesId=?`, [id], (err2) => {
+          if (err2) return reject(err2);
+
+          const values = items.map(it => [id, it.productId, it.qty]);
+          db.query(`INSERT INTO sales_items (salesId, productId, qty) VALUES ?`, [values], (err3) => {
+            if (err3) return reject(err3);
+            resolve({ message: "Sale updated successfully", saleId: id });
+          });
+        });
+      }
+    );
+  });
+};
+
 
 exports.salesDelete = (id) => {
   return new Promise((resolve, reject) => {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import UserService from "../services/UserService";
 
-
 export default function UserManage() {
   const [tab, setTab] = useState("add");
   const [users, setUsers] = useState([]);
@@ -15,7 +14,7 @@ export default function UserManage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 10;
 
   useEffect(() => {
     loadUsers();
@@ -27,6 +26,18 @@ export default function UserManage() {
       .catch(() => setUsers([]));
   };
 
+  const handleSearch = (keyword) => {
+    setSearchTerm(keyword);
+    if (!keyword) {
+      loadUsers();
+      return;
+    }
+
+    UserService.searchUsers(keyword)
+      .then(res => setUsers(res.data.users || []))
+      .catch(() => setUsers([]));
+  };
+
   const saveUser = () => {
     if (!name || !email || !role || (!password && !updateUserId)) {
       setMsg("All fields are required");
@@ -34,11 +45,10 @@ export default function UserManage() {
     }
 
     const userData = { name, email, role, password };
-
     const request = updateUserId ? UserService.updateUser(updateUserId, userData) : UserService.addUser(userData);
 
     request
-      .then(res => {
+      .then(() => {
         setMsg(updateUserId ? "User updated successfully!" : "User added successfully!");
         setName(""); setEmail(""); setRole("user"); setPassword(""); setUpdateUserId(null);
         loadUsers();
@@ -46,17 +56,14 @@ export default function UserManage() {
       })
       .catch(err => {
         console.error(err.response ? err.response.data : err.message);
-        setMsg("❌ Operation failed");
+        setMsg("Operation failed");
       });
   };
 
   const handleDelete = id => {
     if (!window.confirm("Delete this user?")) return;
     UserService.deleteUser(id)
-      .then(() => {
-        setMsg("User deleted successfully!");
-        loadUsers();
-      })
+      .then(() => { setMsg("User deleted successfully!"); loadUsers(); })
       .catch(() => setMsg("Failed to delete user"));
   };
 
@@ -67,19 +74,15 @@ export default function UserManage() {
         setName(user.name);
         setEmail(user.email);
         setRole(user.role);
-        setPassword(""); // password is not fetched for security
+        setPassword("");
         setUpdateUserId(user.id);
         setTab("add");
       })
       .catch(() => setMsg("Failed to fetch user details"));
   };
 
-  const filteredUsers = users.filter(u => 
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const paginatedUsers = filteredUsers.slice((currentPage-1)*pageSize, currentPage*pageSize);
+  // Pagination
+  const paginatedUsers = users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="container p-4">
@@ -90,7 +93,6 @@ export default function UserManage() {
 
       {msg && <div className="alert alert-info">{msg}</div>}
 
-      {/* Add / Update User */}
       {tab==="add" &&
         <div className="card p-4">
           <h4>{updateUserId ? "Update User" : "Add User"}</h4>
@@ -119,18 +121,23 @@ export default function UserManage() {
         </div>
       }
 
-      {/* View Users */}
       {tab==="view" &&
         <div>
           <div className="mb-3">
-            <input type="text" className="form-control" placeholder="Search name or email" value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} />
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search name or email"
+              value={searchTerm}
+              onChange={e=>handleSearch(e.target.value)}
+            />
           </div>
 
           {paginatedUsers.length===0 ? <p className="text-danger">No users found</p> :
             <table className="table table-hover table-striped text-center">
               <thead className="table-dark">
                 <tr>
-                  <th>#</th>
+                  <th>SRNO</th>
                   <th>Name</th>
                   <th>Email</th>
                   <th>Role</th>
@@ -156,7 +163,7 @@ export default function UserManage() {
 
           <div className="d-flex justify-content-end mb-3">
             <button className="btn btn-sm btn-secondary me-2" disabled={currentPage===1} onClick={()=>setCurrentPage(currentPage-1)}>Prev</button>
-            <button className="btn btn-sm btn-secondary" disabled={currentPage*pageSize>=filteredUsers.length} onClick={()=>setCurrentPage(currentPage+1)}>Next</button>
+            <button className="btn btn-sm btn-secondary" disabled={currentPage*pageSize>=users.length} onClick={()=>setCurrentPage(currentPage+1)}>Next</button>
           </div>
         </div>
       }
