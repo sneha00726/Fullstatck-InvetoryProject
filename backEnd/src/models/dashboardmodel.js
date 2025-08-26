@@ -1,6 +1,5 @@
 let db = require("../../db.js");
 
-
 exports.dashmodel=()=>
 {
     return new Promise((resolve,reject)=>

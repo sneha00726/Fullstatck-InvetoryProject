@@ -1,5 +1,23 @@
 /* footer.css */
 
+html {
+  scroll-behavior: smooth;
+}
+
+.back-to-top-btn {
+  background: linear-gradient(45deg, #ff6b6b, #f8c291); /* gradient रंग */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.back-to-top-btn:hover {
+  background: linear-gradient(45deg, #e55039, #fa983a); /* hover effect */
+}
+
 .footer-container {
   margin-top: 40px;
 }

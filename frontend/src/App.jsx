@@ -21,7 +21,6 @@ import HeroSection from "./pages/home/heroSection.jsx";
 import AboutSection from "./pages/home/aboutSection.jsx";
 import UserManage from "./pages/userManage.jsx";
 import AddPurchase from "./pages/Purchase.jsx";
-
 import Dashboard from "./pages/dashborad/DashBorad.jsx";
 
 import PurchaseManagement from "./pages/purchase/PurchaseManagement.jsx";
