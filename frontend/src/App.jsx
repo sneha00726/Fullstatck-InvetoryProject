@@ -21,7 +21,9 @@ import HeroSection from "./pages/home/heroSection.jsx";
 import AboutSection from "./pages/home/aboutSection.jsx";
 import UserManage from "./pages/userManage.jsx";
 import AddPurchase from "./pages/Purchase.jsx";
+import Dashboard from "./pages/dashborad/DashBorad.jsx";
 
+import PurchaseManagement from "./pages/purchase/PurchaseManagement.jsx";
 
 export default class App extends React.Component{
   render(){
@@ -38,18 +40,23 @@ export default class App extends React.Component{
     <Route path="/dashboard" element={<DashBoard/>}>      
       {/* Product routes */}
       <Route path="addproduct" element={<AddProduct />} />
+
       {/* Category routes */}
       <Route path="addcategory" element={<AddCategory/>}/>
+      
       {/* Supplier routes */}
       <Route path="addsupplier" element={<AddSupplier/>}/>
       
       {/* Customer routes */}
       <Route path="addcustomer" element={<AddCustomer/>}/>
-    
+     
+       {/* Purchase */}
+      <Route path="purchases" element={<PurchaseManagement />} />
+
       {/* Sales */}
       <Route path="addsales" element={<AddSale/>}/>
       <Route path="user" element={<UserManage/>}/>
-       <Route path="purchases" element={<AddPurchase/>}/>
+      <Route path="purchases" element={<AddPurchase/>}/>
 
       {/*  Default dashboard content */}
       <Route index element={<h2>Welcome to Dashboard </h2>}/>
@@ -61,9 +68,10 @@ export default class App extends React.Component{
     <Route path="/hero" element={<HeroSection/>}/>
     <Route path="/about" element={<AboutSection/>}/>
     <Route path="/footer" element={<Footer/>}/>
-  </Routes>
-</BrowserRouter>
+    <Route path="/AddSupplier" element={<AddSupplier/>}/>
 
+   </Routes>
+   </BrowserRouter>
     
     </>
   }

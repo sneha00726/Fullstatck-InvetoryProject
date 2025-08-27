@@ -2,6 +2,7 @@ import React from "react";
 import { Link, Outlet } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "../../services/login.register";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { FaBox, FaList, FaUser, FaTruck, FaShoppingCart, FaUsers, FaMoneyBill, FaSignOutAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "../../styles/dashboard.css";
 
 export default class DashBoard extends React.Component {
@@ -21,92 +22,68 @@ export default class DashBoard extends React.Component {
   };
 
   toggleSidebar = () => {
-    this.setState({ sidebarCollapsed: !this.state.sidebarCollapsed });
+    this.setState((prev) => ({ sidebarCollapsed: !prev.sidebarCollapsed }));
   };
 
   render() {
     const { userRole, userName, sidebarCollapsed } = this.state;
     const sidebarWidth = sidebarCollapsed ? 70 : 220;
 
+    // Menu items with icons
+    const menuItems = [
+      { name: "Products", icon: <FaBox />, path: "addproduct" },
+      { name: "Category", icon: <FaList />, path: "addcategory" },
+      { name: "Customer", icon: <FaUser />, path: "addcustomer" },
+    ];
+
+    if (userRole === "admin") {
+      menuItems.push(
+        { name: "Suppliers", icon: <FaTruck />, path: "addsupplier" },
+        { name: "Purchases", icon: <FaMoneyBill />, path: "purchases" },
+        { name: "Manage Users", icon: <FaUsers />, path: "user" }
+      );
+    }
+
+    menuItems.push({ name: "Sales", icon: <FaShoppingCart />, path: "addsales" });
+
     return (
-      <div className="d-flex">
+      <div className="dashboard">
         {/* Sidebar */}
-        <div
-          className={`bg-dark text-white p-3 d-flex flex-column`}
-          style={{
-            position: "fixed",
-            height: "100vh",
-            width: sidebarWidth,
-            transition: "0.3s",
-          }}
-        >
+        <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`} style={{ width: sidebarWidth }}>
           <h4 className="text-center mb-4">{sidebarCollapsed ? "INV" : "Inventory"}</h4>
-          <ul className="nav nav-pills flex-column gap-2">
-            <li className="nav-item">
-              <Link className="nav-link btn btn-outline-light w-100 text-start" to="addproduct">
-                {sidebarCollapsed ? "P" : "Products"}
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link btn btn-outline-light w-100 text-start" to="addcategory">
-                {sidebarCollapsed ? "C" : "Category"}
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link btn btn-outline-light w-100 text-start" to="addcustomer">
-                {sidebarCollapsed ? "CU" : "Customer"}
-              </Link>
-            </li>
-            {userRole === "admin" && (
-              <>
-                <li className="nav-item">
-                  <Link className="nav-link btn btn-outline-light w-100 text-start" to="addsupplier">
-                    {sidebarCollapsed ? "S" : "Suppliers"}
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link btn btn-outline-light w-100 text-start" to="purchases">
-                    {sidebarCollapsed ? "PU" : "Purchases"}
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link btn btn-outline-light w-100 text-start" to="user">
-                    {sidebarCollapsed ? "MU" : "Manage Users"}
-                  </Link>
-                </li>
-              </>
-            )}
-            <li className="nav-item">
-              <Link className="nav-link btn btn-outline-light w-100 text-start" to="addsales">
-                {sidebarCollapsed ? "SA" : "Sales"}
-              </Link>
-            </li>
+
+          <ul className="nav flex-column gap-2">
+            {menuItems.map((item) => (
+              <li className="nav-item" key={item.name}>
+                <Link className="nav-link" to={item.path}>
+                  <span className="icon">{item.icon}</span>
+                  {!sidebarCollapsed && <span className="text">{item.name}</span>}
+                  {sidebarCollapsed && <span className="tooltip">{item.name}</span>}
+                </Link>
+              </li>
+            ))}
           </ul>
 
-          <div className="mt-auto text-center">
-            <button className="btn btn-sm btn-secondary mb-2" onClick={this.toggleSidebar}>
-              {sidebarCollapsed ? "Expand" : "Collapse"}
+          <div className="mt-auto text-center sidebar-buttons">
+            <button className="btn btn-sm btn-secondary toggle-btn" onClick={this.toggleSidebar}>
+              {sidebarCollapsed ? <FaChevronRight /> : <FaChevronLeft />} {/* Icon only when collapsed/expanded */}
             </button>
-            <button className="btn btn-sm btn-danger" onClick={this.handleLogout}>
-              Logout
+            <button className="btn btn-sm btn-danger logout-btn" onClick={this.handleLogout}>
+              {sidebarCollapsed ? <FaSignOutAlt /> : "Logout"}
             </button>
           </div>
         </div>
 
         {/* Main Content */}
-        <div
-          className="flex-grow-1 p-4 bg-light"
-          style={{
-            marginLeft: sidebarWidth,
-            minHeight: "100vh",
-          }}
-        >
-          <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="main-content" style={{ marginLeft: sidebarWidth }}>
+          <div className="topbar">
             <h5>
               Welcome {userRole === "admin" ? "Admin" : "User"} ({userName})
             </h5>
           </div>
-          <Outlet /> {/* nested route content */}
+          <div className="content">
+            <Outlet />
+          </div>
         </div>
       </div>
     );

@@ -40,9 +40,15 @@ export default class AddProduct extends React.Component {
       .catch((err) => console.error(err));
   };
 
+<<<<<<< HEAD
   // Handles both add and update product
   sendProdToServer = (e) => {
     e.preventDefault();
+=======
+//Handles both add and update product
+sendProdToServer = (e) => {
+  e.preventDefault();
+>>>>>>> e17f7941dbb5972d8e97dd32203882f229a4a475
 
     const { pid, pname, price, supplier_id, cid, stock } = this.state;
     const productObj = { pname, price, supplier_id, cid, stock };
@@ -65,6 +71,7 @@ export default class AddProduct extends React.Component {
           const backendMsg = err.response?.data?.message || "Error updating product";
           this.setState({ msg: backendMsg });
         });
+<<<<<<< HEAD
     } else {
       // Add
       ProductService.saveProduct(productObj)
@@ -82,6 +89,25 @@ export default class AddProduct extends React.Component {
         .catch((err) => {
           const backendMsg = err.response?.data?.message || "Error adding product";
           this.setState({ msg: backendMsg });
+=======
+        this.loadProducts(); // reload list
+      })
+      .catch((err) => {
+        console.error(err);
+        this.setState({ msg: " Error updating product" });
+      });
+  } else {
+    // 🔹 Add new product
+    ProductService.saveProduct(productObj)   
+      .then(() => {
+        this.setState({
+          msg: "Product added successfully!",
+          pname: "",
+          price: "",
+          supplier_id: "",
+          cid: "",
+          stock: ""
+>>>>>>> e17f7941dbb5972d8e97dd32203882f229a4a475
         });
     }
   };

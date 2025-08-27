@@ -109,6 +109,7 @@ exports.getSalebyID=(id)=>
         
     });
 }
+<<<<<<< HEAD
 exports.updateSaleItem = (itemId, productId, quantity, rate, saleId) => {
   return new Promise((resolve, reject) => {
     if (!itemId) {
@@ -118,6 +119,31 @@ exports.updateSaleItem = (itemId, productId, quantity, rate, saleId) => {
         [saleId, productId, quantity, rate],
         (err, result) => {
           if (err) return reject(err);
+=======
+exports.updateSales = (id, salesDate, customerId, paymentMode, gstInvoice, items) => {
+  return new Promise((resolve, reject) => {
+    db.query(
+      `UPDATE sales SET salesDate=?, customerId=?, paymentMode=?, gstInvoice=? WHERE salesId=?`,
+      [salesDate, customerId, paymentMode, gstInvoice, id],
+      (err, result) => {
+        if (err) return reject(err);
+
+        // delete old items and insert new
+        db.query(`DELETE FROM sales_items WHERE salesId=?`, [id], (err2) => {
+          if (err2) return reject(err2);
+
+          const values = items.map(it => [id, it.productId, it.qty]);
+          db.query(`INSERT INTO sales_items (salesId, productId, qty) VALUES ?`, [values], (err3) => {
+            if (err3) return reject(err3);
+            resolve({ message: "Sale updated successfully", saleId: id });
+          });
+        });
+      }
+    );
+  });
+};
+
+>>>>>>> e17f7941dbb5972d8e97dd32203882f229a4a475
 
           // Deduct stock
           db.query("UPDATE product SET qty = qty - ? WHERE pid=?", [quantity, productId], err2 => {

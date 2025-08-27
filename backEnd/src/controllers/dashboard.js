@@ -1,4 +1,3 @@
-
 let dash_model=require("../models/dashboardmodel.js");
 exports.dashboard=(req,res)=>
 {

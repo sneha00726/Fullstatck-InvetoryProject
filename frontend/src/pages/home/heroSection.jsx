@@ -3,11 +3,11 @@ import ReactDom from 'react-dom';
 import { Link } from "react-router-dom";
 import "../../styles/sections.css";
 
-export default class HeroSection  extends React.Component{
-
+export default class HeroSection extends React.Component
+{
     render()
     {
-        return <>
+       return <>
        <div id="home" className="herosection">
        
         <div className="headline"> 
@@ -17,11 +17,10 @@ export default class HeroSection  extends React.Component{
             </p>
         </div>
          <div className="button">
-            <Link to="/login" className="btn btn-primary" role="button">
+            <Link to="/login" className="btn btn-info" role="button">
               Get Start
             </Link>
           </div>
-
        </div>
         </>
     }

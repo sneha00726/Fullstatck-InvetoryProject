@@ -120,7 +120,7 @@ exports.deleteProdById=(req,res)=>
 }
 
 exports.searchProdByName = (req, res) => {
-    let name = req.params.name; //
+    let name = req.params.name; 
     let promise = pmodel.searchProdByName(name);
 
     promise.then((result) => {

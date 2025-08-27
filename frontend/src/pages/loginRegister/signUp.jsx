@@ -28,6 +28,10 @@ export default class SignUp extends React.Component {
     }
   };
 
+  goHome = () => {
+    window.location.href = "/";
+  };
+
   render() {
     const { name, email, password, role, message } = this.state;
 
@@ -70,7 +74,9 @@ export default class SignUp extends React.Component {
                       value={password}
                       placeholder="Enter your password"
                       className="form-control"
-                      onChange={(e) => this.setState({ password: e.target.value })}
+                      onChange={(e) =>
+                        this.setState({ password: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -87,15 +93,20 @@ export default class SignUp extends React.Component {
                       <option value="admin">Admin</option>
                     </select>
                   </div>
-                  <div className="d-grid">
+                  <div className="d-grid mb-2">
                     <button type="submit" className="btn btn-success">
                       Register
                     </button>
                   </div>
-                  {message && (
-                    <p className="text-danger mt-3 text-center">{message}</p>
-                  )}
                 </form>
+                <div className="d-grid">
+                  <button className="btn btn-secondary" onClick={this.goHome}>
+                    Go to Home
+                  </button>
+                </div>
+                {message && (
+                  <p className="text-danger mt-3 text-center">{message}</p>
+                )}
               </div>
               <div className="card-footer text-center">
                 Already have an account? <a href="/login">Login here</a>

@@ -1,16 +1,15 @@
 import React from "react";
 import ReactDom from 'react-dom';
 import "../../styles/sections.css";
-
-export default class ReviewSection  extends React.Component{
-
+export default class ReviewSection extends React.Component
+{
     render()
     {
-        return <>
+      return <>
        
-       <div className="container my-5 ">
-  <h2 className="text-center mb-4">What Our Users Say</h2>
-  <div className="row text-center">
+      <div className="container my-5 ">
+      <h2 className="text-center mb-4">What Our Users Say</h2>
+      <div className="row text-center">
 
     {/* Testimonial 1 */}
     <div className="col-md-4">
@@ -53,8 +52,6 @@ export default class ReviewSection  extends React.Component{
 
   </div>
 </div>
-
-
         </>
     }
 }

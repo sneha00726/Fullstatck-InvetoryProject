@@ -18,16 +18,16 @@ let authorizeRoles  = require("../middleware/authorized.js");
 router.get("/", ctrl.HomeLoginPage);
 router.post("/api/register", ctrl.RegisterApi);
 router.post("/api/login", ctrl.LoginPage);
-
 router.get("/dashboard",dash.dashboard);
 
 // category api 
 router.post("/api/categories/add", VerifyToken, authorizeRoles("admin"), cat_ctrl.createCategory);
 router.get("/api/categories/view", VerifyToken, authorizeRoles("admin","user"), cat_ctrl.getAllCategory);
 router.get("/api/categories/:id", VerifyToken, authorizeRoles("admin"),  cat_ctrl.getCategoryById);
-router.put("/api/category/update/:id",  VerifyToken, authorizeRoles("admin"), cat_ctrl.UpdateCategory);
-router.delete("/api/category/delete/:id", VerifyToken, authorizeRoles("admin"),cat_ctrl.DeleteCategory);
-router.get("/api/category/search/:name", VerifyToken, authorizeRoles("admin","user"),cat_ctrl.searchCategory);
+router.put("/api/categories/update/:id",  VerifyToken, authorizeRoles("admin"), cat_ctrl.UpdateCategory);
+router.delete("/api/categories/delete/:id", VerifyToken, authorizeRoles("admin"),cat_ctrl.DeleteCategory);
+router.get("/api/categories/search/:name", VerifyToken, authorizeRoles("admin","user"),cat_ctrl.searchCategory);
+
 
 
 //product
@@ -46,7 +46,6 @@ router.put("/api/suppliers/update/:id", VerifyToken, authorizeRoles("admin"), sc
 router.delete("/api/suppliers/delete/:id", VerifyToken, authorizeRoles("admin"), sctrl.deleteSupplierById);
 router.get("/api/suppliers/search/:name", VerifyToken, authorizeRoles("admin"),sctrl.searchSupplier);
 
-
 //customer
 router.post("/api/customer/add", VerifyToken, authorizeRoles("admin","user"), cust_ctrl.AddCustomer);
 router.get("/api/customer/view", VerifyToken, authorizeRoles("admin","user"),cust_ctrl.viewAllCustomer);
@@ -54,6 +53,7 @@ router.get("/api/customer/:id", VerifyToken, authorizeRoles("admin","user"),cust
 router.put("/api/customer/updateBy/:id", VerifyToken, authorizeRoles("admin","user"),cust_ctrl.UpdateCustomer);
 router.delete("/api/customer/delete/:id", VerifyToken, authorizeRoles("admin","user"),cust_ctrl.CustomerDelete);
 router.get("/api/customer/search/:name", VerifyToken, authorizeRoles("admin","user"),cust_ctrl.CustSearch);
+
 //purchase
 router.post("/api/purchases/add", VerifyToken, authorizeRoles("admin"),purctrl.addPurchase);
 router.get("/api/purchases/view", VerifyToken, authorizeRoles("admin"),purctrl.viewPurchases);
@@ -77,7 +77,6 @@ router.get("/api/users/:id", VerifyToken, authorizeRoles("admin"), userctr.getUs
 router.put("/api/users/update/:id", VerifyToken, authorizeRoles("admin"), userctr.updateUser);
 router.delete("/api/users/delete/:id", VerifyToken, authorizeRoles("admin"), userctr.deleteUser);
 router.get("/api/users/search/:keyword", VerifyToken, authorizeRoles("admin"), userctr.searchUsers);
-
 
 module.exports = router;
 
