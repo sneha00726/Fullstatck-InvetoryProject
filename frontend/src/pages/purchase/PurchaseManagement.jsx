@@ -104,9 +104,6 @@ let PurchaseManagement = () => {
           >
             Add Purchase
           </Button>
-          <Link to="/dashboard" className="btn btn-secondary">
-            Dashboard
-          </Link>
         </div>
       </div>
 

@@ -57,7 +57,7 @@ export default class AddProduct extends React.Component {
       .catch((err) => console.error(err));
   };
 
-// ✅ Handles both add and update product
+//Handles both add and update product
 sendProdToServer = (e) => {
   e.preventDefault();
 
@@ -90,7 +90,7 @@ sendProdToServer = (e) => {
     ProductService.saveProduct(productObj)   
       .then(() => {
         this.setState({
-          msg: "✅ Product added successfully!",
+          msg: "Product added successfully!",
           pname: "",
           price: "",
           supplier_id: "",
