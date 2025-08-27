@@ -14,7 +14,7 @@ exports.createCategory=(req,res)=>
        res.status(201).json({ message: "Category saved successfully" });
     }).catch((err)=>
     {
-        res.status(409).json({ message: "data is not save duplicate entry not allowed" });
+        res.status(409).json({ message: "category name is already exits!" });
        
     });
 
@@ -102,7 +102,7 @@ exports.DeleteCategory=(req,res)=>
         
     }).catch((err)=>
     {
-        res.status(500).json({ message: "Failed to delete category"});    });
+        res.status(500).json({ message: "Failed to delete category"+err});    });
 }
 
 

@@ -1,9 +1,13 @@
 let model_cust=require("../models/customermodel.js");
-
+let { validateCustomer } = require("../validation/customervalidation.js");
 // Add a new customer
 exports.AddCustomer=(req,res)=>
 {
     let {name,email,phone_no,company_name,address,gstNumber} = req.body;
+     const errors = validateCustomer(name, email, phone_no, company_name, address, gstNumber);
+    if (errors.length > 0) {
+        return res.status(400).json({ message: "Validation failed", errors });
+    }
     if (!name || !email || !phone_no || !company_name || !address || !gstNumber) {
         return res.status(400).send("All fields are required");
     }
@@ -17,7 +21,7 @@ exports.AddCustomer=(req,res)=>
         }).catch((err)=>
         {
             
-            res.status(500).json({ message: "Customer not saved maybe duplicate data", error: err });
+            res.status(500).json({ message: "Customer not save with same email ", error: err });
         });
 }
 // View all customers

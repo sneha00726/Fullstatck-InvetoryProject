@@ -1,7 +1,6 @@
 import React from "react";
 import ProductService from "../../services/ProductSerivce";
 import CategoryService from "../../services/CategoryService";
-import SupplierService from "../../services/supplierservice";
 import { getCurrentUser } from "../../services/login.register";
 import "../../styles/productdash.css";
 
@@ -18,7 +17,6 @@ export default class AddProduct extends React.Component {
       stock: "",
       msg: "",
       categories: [],
-      suppliers: [],
       products: [],
       currentPage: 1,
       productsPerPage: 10,
@@ -29,89 +27,95 @@ export default class AddProduct extends React.Component {
   }
 
   componentDidMount() {
-    //  Categories
     CategoryService.getCategory()
       .then((res) => this.setState({ categories: res.data }))
       .catch((err) => console.error(err));
-
-    //  Suppliers 
-    SupplierService.getSupplier()
-      .then((res) => {
-        console.log("Supplier API Response:", res.data);
-        const suppliers = Array.isArray(res.data.suppliers)
-          ? res.data.suppliers
-          : res.data; // fallback if API returns array directly
-        this.setState({ suppliers });
-      })
-      .catch((err) => {
-        console.error(err);
-        this.setState({ suppliers: [] });
-      });
 
     this.loadProducts();
   }
 
   loadProducts = () => {
-    ProductService.getAllProducts()
+    ProductService.getAllProducts() // ✅ now fetches both active + inactive
       .then((res) => this.setState({ products: res.data }))
       .catch((err) => console.error(err));
   };
 
-//  Handles both add and update product
-sendProdToServer = (e) => {e.preventDefault();
+  // Handles both add and update product
+  sendProdToServer = (e) => {
+    e.preventDefault();
 
-  const { pid, pname, price, supplier_id, cid, stock } = this.state;
+    const { pid, pname, price, supplier_id, cid, stock } = this.state;
+    const productObj = { pname, price, supplier_id, cid, stock };
 
-  // create product object
-  const productObj = { pname, price, supplier_id, cid, stock };
-
-  if (pid) {
-    //Update existing product
-    ProductService.updateProduct(pid, productObj)  
-      .then(() => {
-        this.setState({
-          msg: "Product updated successfully!",
-          pid: "",
-          pname: "",
-          price: "",
-          supplier_id: "",
-          cid: "",
-          stock: ""
+    if (pid) {
+      // Update
+      ProductService.updateProduct(pid, productObj)
+        .then(() => {
+          this.setState({
+            msg: "",
+            pid: "",
+            pname: "",
+            price: "",
+            cid: "",
+          });
+          this.loadProducts();
+          alert("✅ Product updated successfully!");
+        })
+        .catch((err) => {
+          const backendMsg = err.response?.data?.message || "Error updating product";
+          this.setState({ msg: backendMsg });
         });
-        this.loadProducts(); // reload list
-      })
-      .catch((err) => {
-        console.error(err);
-        this.setState({ msg: " Error updating product" });
-      });
-  } else {
-    // Add new product
-    ProductService.saveProduct(productObj)   
-      .then(() => {
-        this.setState({
-          msg: " Product added successfully!",
-          pname: "",
-          price: "",
-          supplier_id: "",
-          cid: "",
-          stock: ""
+    } else {
+      // Add
+      ProductService.saveProduct(productObj)
+        .then(() => {
+          this.setState({
+            msg: "",
+            pname: "",
+            price: "",
+            cid: "",
+            stock: "",
+          });
+          this.loadProducts();
+          alert("✅ Product added successfully!");
+        })
+        .catch((err) => {
+          const backendMsg = err.response?.data?.message || "Error adding product";
+          this.setState({ msg: backendMsg });
         });
-        this.loadProducts(); // reload list
-      })
-      .catch((err) => {
-        console.error(err);
-        this.setState({ msg: "Error adding product" });
-      });
-  }
-};
-
+    }
+  };
 
   handleSearch = (e) => {
-    this.setState({ search: e.target.value });
+    const searchValue = e.target.value;
+    this.setState({ search: searchValue });
+
+    if (searchValue.trim() === "") {
+      this.loadProducts();
+    } else {
+      ProductService.searchProduct(searchValue)
+        .then((res) => this.setState({ products: res.data }))
+        .catch((err) => {
+          console.error(err);
+          this.setState({ products: [] });
+        });
+    }
   };
 
   paginate = (page) => {
     this.setState({ currentPage: page });
+  };
+
+  //Soft delete (set status=inactive instead of removing)
+  handleDelete = (pid) => {
+    if (window.confirm("Are you sure you want to deactivate this product?")) {
+      ProductService.delProd(pid) // backend should do UPDATE product SET status='inactive'
+        .then(() => {
+          this.loadProducts();
+          alert("🚫 Product deactivated successfully!");
+        })
+        .catch(() => alert("Error deactivating product"));
+    }
   };
 
   render() {
@@ -119,12 +123,10 @@ sendProdToServer = (e) => {e.preventDefault();
       pid,
       pname,
       price,
-      supplier_id,
       cid,
       stock,
       msg,
       categories,
-      suppliers,
       products,
       currentPage,
       productsPerPage,
@@ -162,7 +164,6 @@ sendProdToServer = (e) => {e.preventDefault();
                   pid: "",
                   pname: "",
                   price: "",
-                  supplier_id: "",
                   cid: "",
                   stock: "",
                 })
@@ -179,7 +180,9 @@ sendProdToServer = (e) => {e.preventDefault();
             <h4>{pid ? "Update Product" : "Add Product"}</h4>
             <form onSubmit={this.sendProdToServer}>
               <div className="form-group m-2">
-                <input type="text" value={pname}
+                <input
+                  type="text"
+                  value={pname}
                   placeholder="Enter product name"
                   className="form-control"
                   onChange={(e) => this.setState({ pname: e.target.value })}
@@ -196,24 +199,7 @@ sendProdToServer = (e) => {e.preventDefault();
                   required
                 />
               </div>
-              {/* Supplier dropdown */}
-              <div className="form-group m-2">
-                <select
-                  className="form-control"
-                  value={supplier_id}
-                  onChange={(e) =>
-                    this.setState({ supplier_id: e.target.value })
-                  }
-                  required
-                >
-                  <option value="">-- Select Supplier --</option>
-                  {suppliers.map((sup) => (
-                    <option key={sup.sid} value={sup.sid}>
-                      {sup.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
               {/* Category dropdown */}
               <div className="form-group m-2">
                 <select
@@ -230,27 +216,29 @@ sendProdToServer = (e) => {e.preventDefault();
                   ))}
                 </select>
               </div>
-              <div className="form-group m-2">
-                <input
-                  type="number"
-                  value={stock}
-                  placeholder="Enter stock"
-                  className="form-control"
-                  onChange={(e) => this.setState({ stock: e.target.value })}
-                  required
-                />
-              </div>
+
+              <input
+                type="number"
+                value={stock}
+                placeholder="Enter stock"
+                className="form-control"
+                onChange={(e) => this.setState({ stock: e.target.value })}
+                required
+                disabled={!!pid}
+                title={pid ? "Stock cannot be changed while updating" : "Enter stock quantity"}
+              />
+
               <div className="form-group m-2">
                 <button type="submit" className="btn btn-success w-100">
                   {pid ? "Update Product" : "Save Product"}
                 </button>
               </div>
-              <div className="text-success">{msg}</div>
+              {msg && <div className="alert alert-danger mt-2">{msg}</div>}
             </form>
           </div>
         )}
 
-        {/* Product List (All roles can view/search) */}
+        {/* Product List */}
         <h4>Product List</h4>
         <table className="table table-hover table-striped align-middle text-center">
           <thead className="table-dark">
@@ -260,7 +248,7 @@ sendProdToServer = (e) => {e.preventDefault();
               <th>Price</th>
               <th>Stock</th>
               <th>Category</th>
-              <th>Supplier</th>
+             
               {userRole === "admin" && <th>Actions</th>}
             </tr>
           </thead>
@@ -269,9 +257,6 @@ sendProdToServer = (e) => {e.preventDefault();
               currentProducts.map((prod) => {
                 const categoryName =
                   categories.find((c) => c.cid === prod.cid)?.cname || prod.cid;
-                const supplierName =
-                  suppliers.find((s) => s.sid === prod.supplier_id)?.name ||
-                  prod.supplier_id;
 
                 return (
                   <tr key={prod.pid}>
@@ -286,7 +271,7 @@ sendProdToServer = (e) => {e.preventDefault();
                       )}
                     </td>
                     <td>{categoryName}</td>
-                    <td>{supplierName}</td>
+                    
                     {userRole === "admin" && (
                       <td>
                         <button
@@ -297,7 +282,6 @@ sendProdToServer = (e) => {e.preventDefault();
                               pid: prod.pid,
                               pname: prod.pname,
                               price: prod.price,
-                              supplier_id: prod.supplier_id,
                               cid: prod.cid,
                               stock: prod.stock,
                             })
@@ -307,19 +291,10 @@ sendProdToServer = (e) => {e.preventDefault();
                         </button>
                         <button
                           className="btn btn-sm btn-danger"
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                "Are you sure you want to delete this product?"
-                              )
-                            ) {
-                              ProductService.delProd(prod.pid).then(() =>
-                                this.loadProducts()
-                              );
-                            }
-                          }}
+                          onClick={() => this.handleDelete(prod.pid)} // ✅ soft delete
+                          disabled={prod.status === "inactive"} // ✅ prevent re-deleting
                         >
-                          Delete
+                          {prod.status === "inactive" ? "Deleted" : "Delete"}
                         </button>
                       </td>
                     )}
@@ -343,37 +318,22 @@ sendProdToServer = (e) => {e.preventDefault();
         <nav>
           <ul className="pagination justify-content-center">
             <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-              <button
-                className="page-link"
-                onClick={() => this.paginate(currentPage - 1)}
-              >
+              <button className="page-link" onClick={() => this.paginate(currentPage - 1)}>
                 Prev
               </button>
             </li>
             {Array.from({ length: totalPages }, (_, i) => (
               <li
                 key={i + 1}
-                className={`page-item ${
-                  currentPage === i + 1 ? "active" : ""
-                }`}
+                className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
               >
-                <button
-                  className="page-link"
-                  onClick={() => this.paginate(i + 1)}
-                >
+                <button className="page-link" onClick={() => this.paginate(i + 1)}>
                   {i + 1}
                 </button>
               </li>
             ))}
-            <li
-              className={`page-item ${
-                currentPage === totalPages ? "disabled" : ""
-              }`}
-            >
-              <button
-                className="page-link"
-                onClick={() => this.paginate(currentPage + 1)}
-              >
+            <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+              <button className="page-link" onClick={() => this.paginate(currentPage + 1)}>
                 Next
               </button>
             </li>

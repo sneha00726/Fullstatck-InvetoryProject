@@ -8,19 +8,20 @@ export default class AddCustomer extends React.Component {
     super();
     const user = getCurrentUser();
     this.state = {
+      id: "",
       name: "",
       email: "",
       phone_no: "",
       company_name: "",
       address: "",
       gstNumber: "",
-      msg: "",
+      errors: {}, // <-- field-specific errors
       customers: [],
       currentPage: 1,
       customersPerPage: 10,
       showForm: false,
       search: "",
-      userRole: user?.role || "user", //  both roles can access
+      userRole: user?.role || "user",
     };
   }
 
@@ -47,34 +48,59 @@ export default class AddCustomer extends React.Component {
       .then((res) => this.setState({ customers: res.data, currentPage: 1 }))
       .catch(() => this.setState({ customers: [] }));
   };
+sendCustomerToServer = () => {
+  const { id, name, email, phone_no, company_name, address, gstNumber } = this.state;
 
-  sendCustomerToServer = () => {
-    const { id, name, email, phone_no, company_name, address, gstNumber } = this.state;
+  this.setState({ errors: {} });
 
-    if (id) {
-      // update existing customer
-      CustService.updateCustomer(id, { name, email, phone_no, company_name, address, gstNumber })
-        .then((result) => {
-          this.setState({ msg: "Customer updated successfully", showForm: false, id: "" });
-          this.loadCustomers();
-        })
-        .catch(() => this.setState({ msg: "Customer update failed" }));
+  const customerData = { name, email, phone_no, company_name, address, gstNumber };
+
+  const handleError = (err) => {
+    const errorData = err.response?.data;
+    if (errorData?.errors) {
+      const errorsObj = {};
+      errorData.errors.forEach((msg) => {
+        if (msg.toLowerCase().includes("name")) errorsObj.name = msg;
+        else if (msg.toLowerCase().includes("email")) errorsObj.email = msg;
+        else if (msg.toLowerCase().includes("phone")) errorsObj.phone_no = msg;
+        else if (msg.toLowerCase().includes("company")) errorsObj.company_name = msg;
+        else if (msg.toLowerCase().includes("address")) errorsObj.address = msg;
+        else if (msg.toLowerCase().includes("gst")) errorsObj.gstNumber = msg;
+        else errorsObj.general = msg;
+      });
+      this.setState({ errors: errorsObj });
     } else {
-      // add new customer
-      CustService.saveCustomer({ name, email, phone_no, company_name, address, gstNumber })
-        .then((result) => {
-          this.setState({ msg: result.data.message, showForm: false });
-          this.loadCustomers();
-        })
-        .catch(() => this.setState({ msg: "Customer insert failed" }));
+      this.setState({ errors: { general: errorData?.message || "Customer action failed" } });
     }
   };
+
+  if (id) {
+    // Update
+    CustService.updateCustomer(id, customerData)
+      .then(() => {
+        this.setState({ showForm: false, id: "", errors: {} });
+        this.loadCustomers();
+        window.alert("✅ Customer updated successfully!");
+      })
+      .catch(handleError);
+  } else {
+    // Add
+    CustService.saveCustomer(customerData)
+      .then(() => {
+        this.setState({ showForm: false, errors: {} });
+        this.loadCustomers();
+        window.alert("✅ Customer added successfully!");
+      })
+      .catch(handleError);
+  }
+};
+
 
   paginate = (pageNumber) => this.setState({ currentPage: pageNumber });
 
   render() {
     const {
-      name, email, phone_no, company_name, address, gstNumber, msg,
+      id, name, email, phone_no, company_name, address, gstNumber, errors,
       customers, currentPage, customersPerPage, showForm, search
     } = this.state;
 
@@ -96,7 +122,7 @@ export default class AddCustomer extends React.Component {
           />
           <button
             className="btn btn-primary ms-3"
-            onClick={() => this.setState({ showForm: !showForm })}
+            onClick={() => this.setState({ showForm: !showForm, errors: {} })}
           >
             {showForm ? "View Customers" : "Add Customer"}
           </button>
@@ -105,37 +131,91 @@ export default class AddCustomer extends React.Component {
         {/* Add/Update Customer Form */}
         {showForm && (
           <div className="card p-4 mb-4">
-            <h4>{this.state.id ? "Update Customer" : "Add Customer"}</h4>
+            <h4>{id ? "Update Customer" : "Add Customer"}</h4>
+
+            {/* Name */}
             <div className="form-group m-2">
-              <input type="text" value={name} placeholder="Enter name"
-                     className="form-control" onChange={(e) => this.setState({ name: e.target.value })} />
+              <input
+                type="text"
+                value={name}
+                placeholder="Enter name"
+                className="form-control"
+                onChange={(e) => this.setState({ name: e.target.value })}
+              />
+              {errors.name && <div className="text-danger">{errors.name}</div>}
             </div>
+
+            {/* Email */}
             <div className="form-group m-2">
-              <input type="email" value={email} placeholder="Enter email"
-                     className="form-control" onChange={(e) => this.setState({ email: e.target.value })} />
+              <input
+                type="email"
+                value={email}
+                placeholder="Enter email"
+                className="form-control"
+                onChange={(e) => this.setState({ email: e.target.value })}
+              />
+              {errors.email && <div className="text-danger">{errors.email}</div>}
             </div>
+
+            {/* Phone */}
             <div className="form-group m-2">
-              <input type="text" value={phone_no} placeholder="Enter phone"
-                     className="form-control" onChange={(e) => this.setState({ phone_no: e.target.value })} />
+              <input
+                type="text"
+                value={phone_no}
+                placeholder="Enter phone"
+                className="form-control"
+                onChange={(e) => this.setState({ phone_no: e.target.value })}
+              />
+              {errors.phone_no && <div className="text-danger">{errors.phone_no}</div>}
             </div>
+
+            {/* Company Name */}
             <div className="form-group m-2">
-              <input type="text" value={company_name} placeholder="Enter company name"
-                     className="form-control" onChange={(e) => this.setState({ company_name: e.target.value })} />
+              <input
+                type="text"
+                value={company_name}
+                placeholder="Enter company name"
+                className="form-control"
+                onChange={(e) => this.setState({ company_name: e.target.value })}
+              />
+              {errors.company_name && <div className="text-danger">{errors.company_name}</div>}
             </div>
+
+            {/* Address */}
             <div className="form-group m-2">
-              <input type="text" value={address} placeholder="Enter address"
-                     className="form-control" onChange={(e) => this.setState({ address: e.target.value })} />
+              <input
+                type="text"
+                value={address}
+                placeholder="Enter address"
+                className="form-control"
+                onChange={(e) => this.setState({ address: e.target.value })}
+              />
+              {errors.address && <div className="text-danger">{errors.address}</div>}
             </div>
+
+            {/* GST Number */}
             <div className="form-group m-2">
-              <input type="text" value={gstNumber} placeholder="Enter GST number"
-                     className="form-control" onChange={(e) => this.setState({ gstNumber: e.target.value })} />
+              <input
+                type="text"
+                value={gstNumber}
+                placeholder="Enter GST number"
+                className="form-control"
+                onChange={(e) => this.setState({ gstNumber: e.target.value })}
+              />
+              {errors.gstNumber && <div className="text-danger">{errors.gstNumber}</div>}
             </div>
+
+            {/* General errors */}
+            {errors.general && <div className="text-danger m-2">{errors.general}</div>}
+
             <div className="form-group m-2">
-              <button className="btn btn-success w-100" onClick={this.sendCustomerToServer}>
-                {this.state.id ? "Update Customer" : "Save Customer"}
+              <button
+                className="btn btn-success w-100"
+                onClick={this.sendCustomerToServer}
+              >
+                {id ? "Update Customer" : "Save Customer"}
               </button>
             </div>
-            <div className="text-success">{msg}</div>
           </div>
         )}
 
@@ -165,14 +245,22 @@ export default class AddCustomer extends React.Component {
                 <td>{cust.address}</td>
                 <td>{cust.gstNumber}</td>
                 <td>
-                  <button className="btn btn-sm btn-warning me-2"
-                          onClick={() => this.setState({ showForm: true, ...cust })}>Update</button>
-                  <button className="btn btn-sm btn-danger"
-                          onClick={() => {
-                            if (window.confirm("Are you sure you want to delete this customer?")) {
-                              CustService.delCustomer(cust.id).then(() => this.loadCustomers());
-                            }
-                          }}>Delete</button>
+                  <button
+                    className="btn btn-sm btn-warning me-2"
+                    onClick={() => this.setState({ showForm: true, errors: {}, ...cust })}
+                  >
+                    Update
+                  </button>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to delete this customer?")) {
+                        CustService.delCustomer(cust.id).then(() => this.loadCustomers());
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             )) : (

@@ -30,37 +30,51 @@ export default class AddCategory extends React.Component {
       .catch((err) => console.error(err));
   };
 
-  handleAddOrUpdate = () => {
-    const { name, editId } = this.state;
+handleAddOrUpdate = () => {
+  const { name, editId } = this.state;
 
-    if (!name.trim()) {
-      this.setState({ msg: " Category name is required" });
-      return;
-    }
+  if (!name.trim()) {
+    window.alert("❌ Category name is required");
+    return;
+  }
 
-    if (editId) {
-      // Update category
-      CategoryService.updateCategory(editId, { name })
-        .then((res) => {
-          this.setState({
-            msg: res.data.message,
-            name: "",
-            editId: null,
-            showForm: false,
-          });
-          this.loadCategories();
-        })
-        .catch(() => this.setState({ msg: "Update failed" }));
-    } else {
-      // Add category
-      CategoryService.saveCategory({ name }) 
-        .then((res) => {
-          this.setState({ msg: res.data.message, name: "", showForm: false });
-          this.loadCategories();
-        })
-        .catch(() => this.setState({ msg: " Add failed" }));
-    }
-  };
+  if (editId) {
+    // Update category
+    CategoryService.updateCategory(editId, { name })
+      .then((res) => {
+        window.alert("✅ Category updated successfully!");
+        this.setState({
+          msg: res.data.message,
+          name: "",
+          editId: null,
+          showForm: false,
+        });
+        this.loadCategories();
+      })
+      .catch(() => {
+        window.alert("❌ Update failed");
+        this.setState({ msg: "Update failed" });
+      });
+  } else {
+    // Add category
+    CategoryService.saveCategory({ name })
+      .then((res) => {
+        window.alert("✅ Category added successfully!");
+        this.setState({ msg: res.data.message, name: "", showForm: false });
+        this.loadCategories();
+      })
+      .catch((err) => {
+        if (err.response && err.response.status === 409) {
+          window.alert("⚠️ Category name already exists!");
+          this.setState({ msg: "Category name already exists!" });
+        } else {
+          window.alert("❌ Add failed");
+          this.setState({ msg: "Add failed" });
+        }
+      });
+  }
+};
+
 
   handleDelete = (catId) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
@@ -143,7 +157,7 @@ export default class AddCategory extends React.Component {
                 {editId ? "Update" : "Add"}
               </button>
             </div>
-            <div className="text-success">{msg}</div>
+            
           </div>
         )}
 

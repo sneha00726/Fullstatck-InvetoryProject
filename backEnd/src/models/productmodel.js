@@ -1,19 +1,27 @@
 let db = require("../../db.js");
 
-exports.saveProduct=(pname, price, supplier_id, cid, stock) =>{
+exports.saveProduct = (pname, price, cid, stock) => {
+    return new Promise((resolve, reject) => {
 
-    return new Promise((resolve,reject)=>{
-        db.query("insert into product(pname, price, supplier_id, cid, stock) values (?, ?, ?, ?, ?)",[pname, price, supplier_id, cid, stock],
-            (err,result)=>{
-                if(err){
-                    reject(err);
-                }else{
-                    resolve(result);
-                }
+        // 1️⃣ Check for duplicate product name
+        const checkSql = "SELECT pid FROM product WHERE pname = ?";
+        db.query(checkSql, [pname], (err, results) => {
+            if (err) return reject(err);
+
+            if (results.length > 0) {
+                return reject(new Error("Product name already exists"));
             }
-        );
+
+            // 2️ Insert new product
+            const insertSql = "INSERT INTO product(pname, price, cid, stock) VALUES (?, ?, ?, ?)";
+            db.query(insertSql, [pname, price, cid, stock], (err2, result) => {
+                if (err2) reject(err2);
+                else resolve(result);
+            });
+        });
     });
-}
+};
+
 
 exports.viewProducts=()=>
 {
@@ -38,7 +46,7 @@ exports.getProdById=(id)=>
 {
     return new Promise((resolve, reject)=>
     {
-        db.query("select *from product where pid=?",[id],
+        db.query( "SELECT * FROM product WHERE pid = ? AND status = 'active'",[id],
         (err,result)=>
         {
             if(err)
@@ -53,9 +61,9 @@ exports.getProdById=(id)=>
     });
 }
 
-exports.updateProdById=(id,pname,price,supplier_id,cid,stock)=>{
+exports.updateProdById=(id,pname,price,cid)=>{
     return new Promise((resolve,reject)=>{
-        db.query("update product set pname=?, price=?, supplier_id=?, cid=?, stock=? where pid=?",[pname,price,supplier_id,cid,stock,id],(err,result)=>
+        db.query("update product set pname=?, price=?, cid=? where pid=?",[pname,price,cid,id],(err,result)=>
         {
             if(err)
             {
@@ -72,7 +80,7 @@ exports.updateProdById=(id,pname,price,supplier_id,cid,stock)=>{
 exports.deleteProdById=(id)=>{
     return new Promise((resolve,reject)=>
     {
-        db.query("delete from product where pid=?",[id],
+        db.query("delete from product WHERE pid = ?",[id],
         (err,result)=>
         {
             if(err)
@@ -90,7 +98,7 @@ exports.deleteProdById=(id)=>{
 exports.searchProdByName = (name) => {
     return new Promise((resolve, reject) => {
         db.query(
-            "SELECT * FROM purchase WHERE pname LIKE ?",
+            "SELECT * FROM product WHERE pname LIKE ?",
             [`%${name}%`],
             (err, result) => {
                 if (err) reject(err);

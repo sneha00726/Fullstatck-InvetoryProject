@@ -1,27 +1,30 @@
 let pmodel=require("../models/productmodel.js");
 let {validateProduct,validateId}=require("../validation/productvalidation.js"); 
-exports.addProduct=(req,res)=>
-{
-    let {pname,price,supplier_id,cid,stock}=req.body;
-    let errors=validateProduct(pname,price,supplier_id,cid,stock);
-    if (errors.length>0)
-    {
+exports.addProduct = (req, res) => {
+    let { pname, price, cid, stock } = req.body;
+
+    let errors = validateProduct(pname, price,cid,stock);
+    if (errors.length > 0) {
         return res.status(422).json({
-            errorMsg:"validation error",
-            message:"product name should not blank"
+            errorMsg: "validation error",
+            message: errors.join(", ")
         });
     }
-    let promise=pmodel.saveProduct(pname,price,supplier_id,cid,stock);
 
-    promise.then((result)=>
-    {
-        res.status(201).json({ message: "Product saved successfully" });
-       
-        
-    }).catch((err)=>
-    {
-        res.send("failed");
-    });
+    pmodel.saveProduct(pname, price, cid, stock)
+        .then((result) => {
+            res.status(201).json({
+                message: "Product saved successfully",
+                productId: result.insertId
+            });
+        })
+        .catch((err) => {
+            if (err.message === "Product name already exists") {
+                return res.status(409).json({ message: err.message });
+            }
+            console.error("DB error:", err);
+            res.status(500).json({ message: "Failed to save product", error: err.message });
+        });
 };
 
 exports.viewProducts=(req,res)=>
@@ -64,13 +67,13 @@ exports.getProdById=(req,res)=>
 exports.updateProdById=(req,res)=>
 {   
     let id=req.params.id;
-    let {pname,price,supplier_id,cid,stock}=req.body;
-    let errors=validateProduct(pname,price,supplier_id,cid,stock);
+    let {pname,price,cid}=req.body;
+    /*let errors=validateProduct(pname,price,cid);
     if(errors.length>0)
     {
         return res.status(400).json({errors});
-    }
-    let promise=pmodel.updateProdById(id,pname,price,supplier_id,cid,stock);
+    }*/
+    let promise=pmodel.updateProdById(id,pname,price,cid);
     promise.then((result)=>
     {
        if(result.affectedRows === 0)
