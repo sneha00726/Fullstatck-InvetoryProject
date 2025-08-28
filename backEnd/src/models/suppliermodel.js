@@ -1,5 +1,4 @@
 let db = require("../../db.js");
-
 exports.addSupplier=(name,email,phone,companyname,address,gstnumber) =>{
 
     return new Promise((resolve,reject)=>{
@@ -86,6 +85,7 @@ exports.deleteSupplierById=(id)=>{
         });
     });
 }
+
 exports.searchSupplierByName = (name) => {
     return new Promise((resolve, reject) => {
         db.query(

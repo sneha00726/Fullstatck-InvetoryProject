@@ -1,16 +1,18 @@
 import axios from "axios";
 
 // Helper to get JWT token from localStorage
-let getToken = () => localStorage.getItem("token");
+const getToken = () => localStorage.getItem("token");
 
-class PurchaseService {
+class PurchaseService 
+{
   // Headers with token
   getAuthHeaders() {
     return { headers: { Authorization: `Bearer ${getToken()}` } };
   }
 
-  // Add Purchase
-  addPurchase(purchaseData) {
+  // Create purchase (Admin only)
+  addPurchase(purchaseData) 
+  {
     return axios.post(
       "http://localhost:3000/api/purchases/add",
       purchaseData,
@@ -18,15 +20,15 @@ class PurchaseService {
     );
   }
 
-  // Get all Purchases (with pagination)
-  getAllPurchases(page = 1, limit = 5) {
+  // Read all purchases (Admin & User)
+  getAllPurchases() {
     return axios.get(
-      `http://localhost:3000/api/purchases/view?page=${page}&limit=${limit}`,
+      "http://localhost:3000/api/purchases/view",
       this.getAuthHeaders()
     );
   }
 
-  // Get single purchase by ID
+  // Get purchase by ID
   getPurchaseById(purchaseId) {
     return axios.get(
       `http://localhost:3000/api/purchases/${purchaseId}`,
@@ -34,7 +36,7 @@ class PurchaseService {
     );
   }
 
-  // Update purchase
+  // Update purchase (Admin only)
   updatePurchase(purchaseId, purchaseData) {
     return axios.put(
       `http://localhost:3000/api/purchases/update/${purchaseId}`,
@@ -43,7 +45,7 @@ class PurchaseService {
     );
   }
 
-  // Delete purchase
+  // Delete purchase (Admin only)
   deletePurchase(purchaseId) {
     return axios.delete(
       `http://localhost:3000/api/purchases/delete/${purchaseId}`,
@@ -51,10 +53,10 @@ class PurchaseService {
     );
   }
 
-  // Search purchase by supplier name
-  searchPurchase(supplierName) {
+  // Search purchases (by invoice/supplier etc.)
+  searchPurchase(keyword) {
     return axios.get(
-      `http://localhost:3000/api/purchases/search/${supplierName}`,
+      `http://localhost:3000/api/purchases/search/${keyword}`,
       this.getAuthHeaders()
     );
   }

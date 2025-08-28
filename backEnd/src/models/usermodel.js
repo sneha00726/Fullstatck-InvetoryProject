@@ -1,16 +1,23 @@
-const db = require("../../db.js");
+let db = require("../../db.js");
+let bcrypt = require("bcrypt");
 
-// Create user
-exports.createUser = (name, email, role, password) => {
-  return new Promise((resolve, reject) => {
-    db.query(
-      `INSERT INTO user (name, email, role, password) VALUES (?, ?, ?, ?)`,
-      [name, email, role, password],
-      (err, result) => {
-        if (err) return reject(err);
-        resolve({ message: "User created", userId: result.insertId });
-      }
-    );
+// Create user with hashed password
+exports.createUser = async (name, email, role, password) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let hashedPassword = await bcrypt.hash(password, 10); // hash with 10 salt rounds
+
+      db.query(
+        `INSERT INTO user (name, email, role, password) VALUES (?, ?, ?, ?)`,
+        [name, email, role, hashedPassword],
+        (err, result) => {
+          if (err) return reject(err);
+          resolve({ message: "User created", userId: result.insertId });
+        }
+      );
+    } catch (err) {
+      reject(err);
+    }
   });
 };
 
