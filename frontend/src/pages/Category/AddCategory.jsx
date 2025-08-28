@@ -46,7 +46,7 @@ export default class CategoryManager extends React.Component {
       // Update existing category
       CategoryService.updateCategory(editId, payload)
         .then((res) => {
-          window.alert("✅ Category updated successfully!");
+          window.alert(" Category updated successfully!");
           this.setState({
             msg: res.data.message,
             name: "",
@@ -56,23 +56,23 @@ export default class CategoryManager extends React.Component {
           this.loadCategories();
         })
         .catch(() => {
-          window.alert("❌ Update failed");
+          window.alert(" Update failed");
           this.setState({ msg: "Update failed" });
         });
     } else {
       // Add new category
       CategoryService.saveCategory(payload)
         .then((res) => {
-          window.alert("✅ Category added successfully!");
+          window.alert(" Category added successfully!");
           this.setState({ msg: res.data.message, name: "", showForm: false });
           this.loadCategories();
         })
         .catch((err) => {
           if (err.response && err.response.status === 409) {
-            window.alert("⚠️ Category name already exists!");
+            window.alert(" Category name already exists!");
             this.setState({ msg: "Category name already exists!" });
           } else {
-            window.alert("❌ Add failed");
+            window.alert(" Add failed");
             this.setState({ msg: "Add failed" });
           }
         });
@@ -223,7 +223,7 @@ export default class CategoryManager extends React.Component {
                   colSpan={userRole === "admin" ? "3" : "2"}
                   className="text-danger fw-bold"
                 >
-                  🚫 No categories found
+                   No categories found
                 </td>
               </tr>
             )}

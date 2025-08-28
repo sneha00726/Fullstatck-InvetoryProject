@@ -80,7 +80,7 @@ sendCustomerToServer = () => {
       .then(() => {
         this.setState({ showForm: false, id: "", errors: {} });
         this.loadCustomers();
-        window.alert("✅ Customer updated successfully!");
+        window.alert(" Customer updated successfully!");
       })
       .catch(handleError);
   } else {
@@ -89,7 +89,7 @@ sendCustomerToServer = () => {
       .then(() => {
         this.setState({ showForm: false, errors: {} });
         this.loadCustomers();
-        window.alert("✅ Customer added successfully!");
+        window.alert("Customer added successfully!");
       })
       .catch(handleError);
   }

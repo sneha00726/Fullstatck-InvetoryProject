@@ -9,7 +9,7 @@ export default class Header extends React.Component
       <>
         <nav className="navbar navbar-expand-lg bg-body-tertiary">
           <div className="container-fluid header">
-            <a className="navbar-brand" href="#home">Inventory</a>
+            <a className="navbar-brand" href="#home">Invento</a>
 
             <div className="collapse navbar-collapse option" id="navbarNav">
               <ul className="navbar-nav">

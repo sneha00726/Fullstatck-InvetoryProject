@@ -110,96 +110,100 @@ exports.getSalebyID=(id)=>
     });
 }
 
-exports.updateSaleItem = (itemId, productId, quantity, rate, saleId) => {
+exports.updateSales = (id, paymentMode, items) => {
   return new Promise((resolve, reject) => {
-    if (!itemId) {
-      // Insert new item
-      db.query(
-        "INSERT INTO sales_items (salesId, productId, qty, rate) VALUES (?, ?, ?, ?)",
-        [saleId, productId, quantity, rate],
-        (err, result) => {
-          if (err) return reject(err);
+    // Fetch old items
+    db.query(`SELECT productId, qty FROM sales_items WHERE salesId=?`, [id], (err, oldItems) => {
+      if (err) return reject(err);
 
-exports.updateSales = (id, salesDate, customerId, paymentMode, gstInvoice, items) => {
-  return new Promise((resolve, reject) => {
-    db.query(
-      `UPDATE sales SET salesDate=?, customerId=?, paymentMode=?, gstInvoice=? WHERE salesId=?`,
-      [salesDate, customerId, paymentMode, gstInvoice, id],
-      (err, result) => {
-        if (err) return reject(err);
+      let oldMap = {};
+      oldItems.forEach(it => oldMap[it.productId] = it.qty);
 
-        // delete old items and insert new
-        db.query(`DELETE FROM sales_items WHERE salesId=?`, [id], (err2) => {
-          if (err2) return reject(err2);
+      let newMap = {};
+      items.forEach(it => newMap[it.productId] = it.qty);
 
-          const values = items.map(it => [id, it.productId, it.qty]);
-          db.query(`INSERT INTO sales_items (salesId, productId, qty) VALUES ?`, [values], (err3) => {
-            if (err3) return reject(err3);
-            resolve({ message: "Sale updated successfully", saleId: id });
-          });
-        });
-      }
-    );
-  });
-};
+      let totalAmount = 0;
+      let tasks = [];
 
-
-
-          // Deduct stock
-          db.query("UPDATE product SET qty = qty - ? WHERE pid=?", [quantity, productId], err2 => {
-            if (err2) return reject(err2);
-            resolve(result);
-          });
+      // Restore stock for removed products
+      for (let oldPid in oldMap) {
+        if (!newMap[oldPid]) {
+          tasks.push(new Promise((res, rej) => {
+            db.query(`UPDATE product SET stock = stock + ? WHERE pid=?`, [oldMap[oldPid], oldPid], (err2) => {
+              if (err2) return rej(err2);
+              db.query(`DELETE FROM sales_items WHERE salesId=? AND productId=?`, [id, oldPid], (err3) => {
+                if (err3) return rej(err3);
+                res();
+              });
+            });
+          }));
         }
-      );
-    } else {
-      // Update existing item
-      db.query("SELECT productId, qty FROM sales_items WHERE itemId=?", [itemId], (err, rows) => {
-        if (err) return reject(err);
-        if (rows.length === 0) return reject("Sale item not found");
+      }
 
-        const oldProductId = rows[0].productId;
-        const oldQty = rows[0].qty;
+      // Handle updated & new items
+      items.forEach(it => {
+        tasks.push(new Promise((res, rej) => {
+          db.query(`SELECT price, stock FROM product WHERE pid=?`, [it.productId], (err4, result) => {
+            if (err4) return rej(err4);
+            if (result.length === 0) return rej(new Error("Product not found"));
 
-        // Restore old stock
-        db.query("UPDATE product SET qty = qty + ? WHERE pid=?", [oldQty, oldProductId], err1 => {
-          if (err1) return reject(err1);
+            let product = result[0];
+            let oldQty = oldMap[it.productId] || 0;
+            let qtyDiff = it.qty - oldQty;
 
-          // Deduct new qty
-          db.query("UPDATE product SET qty = qty - ? WHERE pid=?", [quantity, productId], err2 => {
-            if (err2) return reject(err2);
+            if (qtyDiff > 0 && product.stock < qtyDiff) {
+              return rej(new Error("Insufficient stock for product " + it.productId));
+            }
 
-            db.query(
-              "UPDATE sales_items SET productId=?, qty=?, rate=? WHERE itemId=?",
-              [productId, quantity, rate, itemId],
-              (err3, result) => {
-                if (err3) return reject(err3);
-                resolve(result);
-              }
-            );
+            let rate = product.price;
+            totalAmount += rate * it.qty;
+
+            if (oldQty === 0) {
+              // New product → insert
+              db.query(`INSERT INTO sales_items (salesId, productId, qty, rate) VALUES (?, ?, ?, ?)`,
+                [id, it.productId, it.qty, rate], (err5) => {
+                  if (err5) return rej(err5);
+
+                  if (qtyDiff > 0) {
+                    db.query(`UPDATE product SET stock = stock - ? WHERE pid=?`, [qtyDiff, it.productId], (err6) => {
+                      if (err6) return rej(err6);
+                      res();
+                    });
+                  } else res();
+                });
+            } else {
+              // Existing product → update qty
+              db.query(`UPDATE sales_items SET qty=?, rate=? WHERE salesId=? AND productId=?`,
+                [it.qty, rate, id, it.productId], (err7) => {
+                  if (err7) return rej(err7);
+
+                  if (qtyDiff !== 0) {
+                    db.query(`UPDATE product SET stock = stock - ? WHERE pid=?`, [qtyDiff, it.productId], (err8) => {
+                      if (err8) return rej(err8);
+                      res();
+                    });
+                  } else res();
+                });
+            }
           });
-        });
+        }));
       });
-    }
-  });
-};
-exports.getTotalAmount = saleId => {
-  return new Promise((resolve, reject) => {
-    db.query("SELECT SUM(qty * rate) AS total FROM sales_items WHERE salesId=?", [saleId], (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
+
+      Promise.all(tasks)
+        .then(() => {
+          // Update sales main table
+          db.query(`UPDATE sales SET paymentMode=?, totalAmount=? WHERE salesId=?`,
+            [paymentMode, totalAmount, id], (err9) => {
+              if (err9) return reject(err9);
+              resolve({ message: "Sale updated successfully", saleId: id, totalAmount });
+            });
+        })
+        .catch(reject);
     });
   });
 };
 
-exports.updateTotalAmount = (saleId, totalAmount) => {
-  return new Promise((resolve, reject) => {
-    db.query("UPDATE sales SET totalAmount=? WHERE salesId=?", [totalAmount, saleId], (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
-  });
-};
+
 exports.salesDelete = (id) => {
   return new Promise((resolve, reject) => {
     db.query(`DELETE FROM sales_items WHERE salesId=?`, [id], (err) => {

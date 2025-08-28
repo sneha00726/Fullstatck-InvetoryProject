@@ -6,22 +6,25 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleLogin = async (e) => {
+   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const res = await loginUser({ email, password });
-      setMessage(res.message || "Login successful!");
-      // Redirect to dashboard/home page
+
+      // Show success alert
+      alert(res.message || "Login successful!");
+
+      // Redirect after alert
       window.location.href = "/dashboard";
     } catch (err) {
-      setMessage(err.message || "Login failed");
+      // Show failure alert
+      alert(err.message || "Login failed! Please try again.");
     }
   };
 
   const goHome = () => {
     window.location.href = "/";
   };
-
   return (
     <div className="container mt-5">
       <div className="row justify-content-center">

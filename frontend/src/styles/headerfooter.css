@@ -1,6 +1,6 @@
 .header{
     height: 50px;
-   background-color:rgb(238, 239, 224);
+   background-color:rgb(182, 180, 180);
     color:rgb(0, 0, 0);
     display: flex;
     align-items: center;
@@ -9,5 +9,5 @@
 .option{
     display: flex;
     justify-content: end;
-   
+   color:black;
 }
