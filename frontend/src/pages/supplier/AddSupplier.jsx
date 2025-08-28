@@ -15,7 +15,7 @@ export default class AddSupplier extends React.Component {
       companyname: "",
       address: "",
       gstnumber: "",
-      msg: "",
+      msg: [],
       suppliers: [],
       currentPage: 1,
       suppliersPerPage: 10,
@@ -36,21 +36,21 @@ export default class AddSupplier extends React.Component {
     logoutUser();
     this.setState({
       isLoggedIn: false,
-      msg: "Session expired. Please log in again.",
+      msg: ["Session expired. Please log in again."],
     });
   };
 
   loadSuppliers = () => {
     SupplierService.getSupplier()
       .then((res) =>
-        this.setState({ suppliers: res.data.suppliers || [], msg: "" })
+        this.setState({ suppliers: res.data.suppliers || [], msg: [] })
       )
       .catch((err) => {
         console.error(err);
         if (err.response?.status === 401 || err.message.includes("No token")) {
           this.handleUnauthorized();
         } else {
-          this.setState({ msg: "Unable to load suppliers." });
+          this.setState({ msg: ["Unable to load suppliers."] });
         }
       });
   };
@@ -69,12 +69,12 @@ export default class AddSupplier extends React.Component {
         this.setState({
           suppliers: res.data.suppliers || [],
           currentPage: 1,
-          msg: "",
+          msg: [],
         })
       )
       .catch((err) => {
         console.error(err);
-        this.setState({ suppliers: [], msg: "No suppliers found." });
+        this.setState({ suppliers: [], msg: ["No suppliers found."] });
       });
   };
 
@@ -83,7 +83,7 @@ export default class AddSupplier extends React.Component {
       this.state;
 
     if (!name || !email || !phone) {
-      this.setState({ msg: "Name, Email, and Phone are required" });
+      this.setState({ msg: ["Name, Email, and Phone are required"] });
       return;
     }
 
@@ -103,8 +103,9 @@ export default class AddSupplier extends React.Component {
     action
       .then((res) => {
         const msg = sid
-          ? "✅ Supplier updated successfully"
-          : res.data.message || "✅ Supplier added successfully";
+          ? ["✅ Supplier updated successfully"]
+          : [res.data.message || "✅ Supplier added successfully"];
+
         this.setState({
           msg,
           showForm: false,
@@ -116,6 +117,7 @@ export default class AddSupplier extends React.Component {
           address: "",
           gstnumber: "",
         });
+
         this.loadSuppliers();
       })
       .catch((err) => {
@@ -123,8 +125,9 @@ export default class AddSupplier extends React.Component {
         if (err.response?.status === 401 || err.message.includes("No token")) {
           this.handleUnauthorized();
         } else {
+          const serverData = err.response?.data;
           this.setState({
-            msg: err.response?.data?.message || "❌ Action failed",
+            msg: serverData?.errors || [serverData?.message || "❌ Action failed"],
           });
         }
       });
@@ -134,7 +137,7 @@ export default class AddSupplier extends React.Component {
     if (window.confirm("Are you sure you want to delete this supplier?")) {
       SupplierService.delSupplier(sid)
         .then(() => {
-          this.setState({ msg: "🗑️ Supplier deleted successfully" });
+          this.setState({ msg: ["🗑️ Supplier deleted successfully"] });
           this.loadSuppliers();
         })
         .catch((err) => {
@@ -143,7 +146,7 @@ export default class AddSupplier extends React.Component {
             this.handleUnauthorized();
           } else {
             this.setState({
-              msg: err.response?.data?.message || "❌ Supplier deletion failed",
+              msg: [err.response?.data?.message || "❌ Supplier deletion failed"],
             });
           }
         });
@@ -174,9 +177,7 @@ export default class AddSupplier extends React.Component {
     if (!isLoggedIn) {
       return (
         <div className="container p-4">
-          <h4 className="text-danger">
-            {msg || "You are not logged in."}
-          </h4>
+          <h4 className="text-danger">You are not logged in.</h4>
         </div>
       );
     }
@@ -196,8 +197,6 @@ export default class AddSupplier extends React.Component {
 
     return (
       <div className="container p-4">
-        {msg && <div className="alert alert-info">{msg}</div>}
-
         <div className="d-flex justify-content-between align-items-center mb-3">
           <input
             type="text"
@@ -218,6 +217,7 @@ export default class AddSupplier extends React.Component {
                 companyname: "",
                 address: "",
                 gstnumber: "",
+                msg: [],
               })
             }
           >
@@ -249,6 +249,19 @@ export default class AddSupplier extends React.Component {
             >
               {sid ? "Update Supplier" : "Save Supplier"}
             </button>
+
+            {/* Messages below the button */}
+            {Array.isArray(msg) && msg.length > 0 && (
+              <ul
+                className={`alert mt-2 ${
+                  msg[0].startsWith("✅") ? "alert-success" : "alert-danger"
+                }`}
+              >
+                {msg.map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
@@ -280,9 +293,7 @@ export default class AddSupplier extends React.Component {
                   <td>
                     <button
                       className="btn btn-sm btn-warning me-2"
-                      onClick={() =>
-                        this.setState({ showForm: true, ...sup })
-                      }
+                      onClick={() => this.setState({ showForm: true, ...sup })}
                     >
                       Update
                     </button>
@@ -320,10 +331,7 @@ export default class AddSupplier extends React.Component {
                 key={i + 1}
                 className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
               >
-                <button
-                  className="page-link"
-                  onClick={() => this.paginate(i + 1)}
-                >
+                <button className="page-link" onClick={() => this.paginate(i + 1)}>
                   {i + 1}
                 </button>
               </li>

@@ -1,58 +1,48 @@
+let purModel = require("../models/purchasemodel.js");
+let { validatePurchase } = require("../validation/purchasevalidation.js");
 
-let purmodel=require("../models/purchasemodel.js");
-//let {validatePurchase}=require("../validation/purchasevalidation.js")
-exports.addPurchase = (req, res) => {
-    let { invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items } = req.body;
-
-    // Calculate totalamount here
-    let totalamount = 0;
-    if (items && Array.isArray(items)) {
-        totalamount = items.reduce((sum, item) => sum + (item.qty * item.price), 0);
-    }
-
-    // Pass as object
-    let promise = purmodel.addPurchase({
-        invoiceno,
-        purchasedate,
-        supplierid,
-        totalamount,
-        paymentmode,
-        gstinvoice,
-        items
-    });
-
-    promise.then((result) => {
-        res.json({ message: "Purchase added successfully", purchaseId: result.purchaseId, totalamount });
-    }).catch((error) => {
-        console.error("Error while saving purchases", error);
-        res.status(500).json({ message: "Purchase not saved", error: error.message });
-    });
-};
-
-let purModel=require("../models/purchasemodel.js");
-let {validatePurchase}=require("../validation/purchasevalidation.js")
-
+// ✅ Add Purchase
 exports.addPurchase = async (req, res) => {
-  let { invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items } = req.body;
+  const { invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items } = req.body;
 
-
-  let errors = validatePurchase(invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items);
+  // Validation
+  const errors = validatePurchase(invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items);
   if (errors.length > 0) {
     return res.status(400).json({ errors });
   }
 
+  // Calculate total amount
+  let totalamount = 0;
+  if (items && Array.isArray(items)) {
+    totalamount = items.reduce((sum, item) => sum + (item.qty * item.price), 0);
+  }
+
   try {
-    let result = await purModel.addPurchase({ invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items });
-    res.status(201).json(result);
+    const result = await purModel.addPurchase({
+      invoiceno,
+      purchasedate,
+      supplierid,
+      totalamount,
+      paymentmode,
+      gstinvoice,
+      items
+    });
+
+    res.status(201).json({ 
+      message: "Purchase added successfully", 
+      purchaseId: result.purchaseId, 
+      totalamount 
+    });
   } catch (err) {
-    console.error(err);
+    console.error("Error while saving purchase", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });
   }
 };
 
+// ✅ View all purchases
 exports.viewPurchases = async (req, res) => {
   try {
-    let purchases = await purModel.viewPurchases();
+    const purchases = await purModel.viewPurchases();
     res.json(purchases);
   } catch (err) {
     console.error(err);
@@ -60,15 +50,13 @@ exports.viewPurchases = async (req, res) => {
   }
 };
 
+// ✅ Get purchase by ID
 exports.getPurchaseById = async (req, res) => {
   try {
-    let id = req.params.id;
-    let purchase = await purModel.getPurchaseById(id);
-
+    const purchase = await purModel.getPurchaseById(req.params.id);
     if (!purchase || purchase.length === 0) {
       return res.status(404).json({ error: "Purchase not found" });
     }
-
     res.json(purchase);
   } catch (err) {
     console.error(err);
@@ -76,14 +64,10 @@ exports.getPurchaseById = async (req, res) => {
   }
 };
 
+// ✅ Update purchase
 exports.updatePurchaseById = async (req, res) => {
   try {
-    let id = req.params.id;
-    let purchaseData = req.body;
-
-    // optionally validate purchaseData.items here if you want
-
-    let result = await purModel.updatePurchaseById(id, purchaseData);
+    const result = await purModel.updatePurchaseById(req.params.id, req.body);
     res.json(result);
   } catch (err) {
     console.error(err);
@@ -91,10 +75,13 @@ exports.updatePurchaseById = async (req, res) => {
   }
 };
 
+// ✅ Delete purchase
 exports.deletePurchaseById = async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (!id) return res.status(400).json({ error: "Invalid purchase id" });
+
   try {
-    let id = req.params.id;
-    await purmodel.deletePurchaseById(id);
+    await purModel.deletePurchaseById(id);
     res.json({ message: "Purchase deleted successfully" });
   } catch (err) {
     console.error(err);
@@ -102,19 +89,20 @@ exports.deletePurchaseById = async (req, res) => {
   }
 };
 
+// ✅ Search purchase
 exports.purchasesearch = async (req, res) => {
   try {
-    let searchTerm = req.params.name;
-    if (!searchTerm) {
-      return res.status(400).json({ error: "Search term is required" });
-    }
-    let results = await purModel.searchPurchase(searchTerm);
+    const searchTerm = req.params.name;
+    if (!searchTerm) return res.status(400).json({ error: "Search term is required" });
+
+    const results = await purModel.searchPurchase(searchTerm);
     if (results.length === 0) {
       return res.status(404).json({ message: "No matching purchases found" });
     }
+
     res.json(results);
   } catch (err) {
-    console.error("Purchase search error:", err);
+    console.error(err);
     res.status(500).json({ error: "Failed to search purchases" });
   }
 };

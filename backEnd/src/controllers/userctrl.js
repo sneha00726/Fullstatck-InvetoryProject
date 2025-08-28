@@ -8,13 +8,13 @@ exports.addUser = (req, res) => {
     return res.status(400).json({ success: false, message: "All fields are required" });
   }
 
-  const promise = userModel.createUser(name, email, role, password);
-
-  promise.then(result => {
-    res.status(201).json({ success: true, message: "User created successfully", result });
-  }).catch(err => {
-    res.status(500).json({ success: false, message: "User creation failed", error: err.message });
-  });
+  userModel.createUser(name, email, role, password)
+    .then(result => {
+      res.status(201).json({ success: true, message: "User created successfully", result });
+    })
+    .catch(err => {
+      res.status(400).json({ success: false, message: err.message }); // send exact error
+    });
 };
 
 // View all users

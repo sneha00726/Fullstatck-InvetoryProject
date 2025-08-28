@@ -20,16 +20,15 @@ import ReviewSection from "./pages/home/reviewSection.jsx";
 import HeroSection from "./pages/home/heroSection.jsx";
 import AboutSection from "./pages/home/aboutSection.jsx";
 import UserManage from "./pages/userManage.jsx";
-import AddPurchase from "./pages/Purchase.jsx";
 import Dashboard from "./pages/dashborad/DashBorad.jsx";
-
 import PurchaseManagement from "./pages/purchase/PurchaseManagement.jsx";
+import AddPurchase from "./pages/purchase/AddPurchase.jsx";
 
-export default class App extends React.Component{
-  render(){
-    
-    return<>
-   
+export default class App extends React.Component
+{
+  render()
+  {
+  return<>
   <BrowserRouter>
   <Routes>
     <Route path="/" element={<HomePage/>}/>
@@ -37,7 +36,8 @@ export default class App extends React.Component{
     <Route path="/signup" element={<SignUp/>}/>
 
     {/* Dashboard Layout with nested routes */}
-    <Route path="/dashboard" element={<DashBoard/>}>      
+    <Route path="/dashboard" element={<DashBoard/>}>    
+
       {/* Product routes */}
       <Route path="addproduct" element={<AddProduct />} />
 
@@ -50,17 +50,17 @@ export default class App extends React.Component{
       {/* Customer routes */}
       <Route path="addcustomer" element={<AddCustomer/>}/>
      
-       {/* Purchase */}
+      {/* Purchase routes */}
       <Route path="purchases" element={<PurchaseManagement />} />
+      <Route path="purchases/add/:id?" element={<AddPurchase />} />
 
       {/* Sales */}
       <Route path="addsales" element={<AddSale/>}/>
       <Route path="user" element={<UserManage/>}/>
-      <Route path="purchases" element={<AddPurchase/>}/>
 
       {/*  Default dashboard content */}
       <Route index element={<h2>Welcome to Dashboard </h2>}/>
-    </Route>
+      </Route>
 
     {/* Static sections */}
     <Route path="/feature" element={<FeatureSection/>}/>
@@ -72,7 +72,6 @@ export default class App extends React.Component{
 
    </Routes>
    </BrowserRouter>
-    
     </>
   }
 }

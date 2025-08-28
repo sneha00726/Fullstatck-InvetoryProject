@@ -1,19 +1,35 @@
-const db = require("../../db.js");
+let db = require("../../db.js");
+let bcrypt = require("bcrypt");
 
-// Create user
-exports.createUser = (name, email, role, password) => {
-  return new Promise((resolve, reject) => {
-    db.query(
-      `INSERT INTO user (name, email, role, password) VALUES (?, ?, ?, ?)`,
-      [name, email, role, password],
-      (err, result) => {
+// Create user with hashed password
+exports.createUser = async (name, email, role, password) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Check if email already exists
+      db.query(`SELECT * FROM user WHERE email = ?`, [email], async (err, results) => {
         if (err) return reject(err);
-        resolve({ message: "User created", userId: result.insertId });
-      }
-    );
+
+        if (results.length > 0) {
+          return reject(new Error("Duplicate email found, user already exists"));
+        }
+
+        // Hash password
+        let hashedPassword = await bcrypt.hash(password, 10);
+
+        db.query(
+          `INSERT INTO user (name, email, role, password) VALUES (?, ?, ?, ?)`,
+          [name, email, role, hashedPassword],
+          (err, result) => {
+            if (err) return reject(err);
+            resolve({ message: "User created", userId: result.insertId });
+          }
+        );
+      });
+    } catch (err) {
+      reject(err);
+    }
   });
 };
-
 // View all users
 exports.viewUsers = () => {
   return new Promise((resolve, reject) => {

@@ -44,8 +44,17 @@ export default function UserManage() {
       return;
     }
 
+    // Confirmation before save/update
+    if (updateUserId) {
+      if (!window.confirm("Do you really want to update this user?")) return;
+    } else {
+      if (!window.confirm("Do you really want to add this user?")) return;
+    }
+
     const userData = { name, email, role, password };
-    const request = updateUserId ? UserService.updateUser(updateUserId, userData) : UserService.addUser(userData);
+    const request = updateUserId
+      ? UserService.updateUser(updateUserId, userData)
+      : UserService.addUser(userData);
 
     request
       .then(() => {
@@ -91,7 +100,7 @@ export default function UserManage() {
         <button className={`btn ${tab==="view"?"btn-primary":"btn-outline-primary"}`} onClick={()=>setTab("view")}>View Users</button>
       </div>
 
-      {msg && <div className="alert alert-info">{msg}</div>}
+      
 
       {tab==="add" &&
         <div className="card p-4">
