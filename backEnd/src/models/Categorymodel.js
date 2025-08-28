@@ -1,101 +1,70 @@
-let db=require("../../db.js");
+let db = require("../../db.js");
 
-exports.CreateCategoryAdd=(name)=>
-{
-    return new Promise((resolve,reject)=>
-    {
-        db.query("insert into category (cname) values(?)",[name],(err,result)=>
-        {
-            if(err)
-            {
-                reject(err);
+// Add category (with duplicate check)
+exports.CreateCategoryAdd = (name) => {
+    return new Promise((resolve, reject) => {
+        // Check duplicate
+        db.query("SELECT * FROM category WHERE cname=?", [name], (err, rows) => {
+            if (err) return reject(err);
+            if (rows.length > 0) {
+                return reject({ code: "DUPLICATE", message: "Category name already exists" });
             }
-            else{
+
+            // Insert if no duplicate
+            db.query("INSERT INTO category (cname) VALUES(?)", [name], (err2, result) => {
+                if (err2) return reject(err2);
                 resolve(result);
-            }
+            });
         });
     });
-}
+};
 
-exports.getViewCategory=()=>
-{
-    return new Promise((resolve,reject)=>
-    {
-        db.query("select *from category",(err,result)=>
-        {
-            if(err)
-            {
-                reject(err);
-            }
-            else{
-                resolve(result);
-            }
+// Get all categories
+exports.getViewCategory = () => {
+    return new Promise((resolve, reject) => {
+        db.query("SELECT * FROM category ORDER BY cid DESC", (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
         });
     });
-}
+};
 
-
-exports.getIdCategory=(id)=>
-{
-    return new Promise((resolve,reject)=>
-    {
-        db.query("select *from category where cid=?",[id],(err,result)=>
-        {
-            if(err)
-            {
-                reject(err);
+// Update category
+exports.CategoryUpdate = (id, name) => {
+    return new Promise((resolve, reject) => {
+        // Check duplicate excluding current id
+        db.query("SELECT * FROM category WHERE cname=? AND cid<>?", [name, id], (err, rows) => {
+            if (err) return reject(err);
+            if (rows.length > 0) {
+                return reject({ code: "DUPLICATE", message: "Category name already exists" });
             }
-            else{
+
+            db.query("UPDATE category SET cname=? WHERE cid=?", [name, id], (err2, result) => {
+                if (err2) return reject(err2);
                 resolve(result);
-            }
+            });
         });
     });
-}
+};
 
-exports.CategoryUpdate=(id,name)=>
-{
-    return new Promise((resolve,reject)=>
-    {
-        db.query("update category set cname=? where cid=?",[name,id],(err,result)=>
-        {
-            if(err)
-            {
-                reject(err);
-            }
-            else{
-                resolve(result);
-            }
-        });
+// Delete category + its products
+exports.CategoryDelete = (id) => {
+  return new Promise((resolve, reject) => {
+    db.query("DELETE FROM category WHERE cid=?", [id], (err, result) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(result);
     });
-}
+  });
+};
 
-exports.CategoryDelete=(id)=>
-{
-    return new Promise((resolve,reject)=>
-    
-    {
-        db.query("delete from category  where cid=?",[id],(err,result)=>
-        {
-            if(err)
-            {
-                reject(err);
-            }
-            else{
-                resolve(result);
-            }
-        });
-    });
-}
-
+// Search category by name
 exports.categorysearch = (name) => {
     return new Promise((resolve, reject) => {
-        db.query(
-            "SELECT * FROM category WHERE cname LIKE ?",
-            [`%${name}%`],
-            (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            }
-        );
+        db.query("SELECT * FROM category WHERE cname LIKE ?", [`%${name}%`], (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+        });
     });
 };

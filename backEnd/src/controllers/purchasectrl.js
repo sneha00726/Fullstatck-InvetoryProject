@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 let purmodel=require("../models/purchasemodel.js");
 //let {validatePurchase}=require("../validation/purchasevalidation.js")
 exports.addPurchase = (req, res) => {
@@ -28,13 +28,13 @@ exports.addPurchase = (req, res) => {
         res.status(500).json({ message: "Purchase not saved", error: error.message });
     });
 };
-=======
+
 let purModel=require("../models/purchasemodel.js");
 let {validatePurchase}=require("../validation/purchasevalidation.js")
 
 exports.addPurchase = async (req, res) => {
   let { invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items } = req.body;
->>>>>>> e17f7941dbb5972d8e97dd32203882f229a4a475
+
 
   let errors = validatePurchase(invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items);
   if (errors.length > 0) {

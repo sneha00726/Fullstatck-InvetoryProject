@@ -1,27 +1,15 @@
 let db = require("../../db.js");
 
-<<<<<<< HEAD
+/**
+ * Add Purchase
+ */
 exports.addPurchase = ({ invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items }) => {
   return new Promise((resolve, reject) => {
-    // Calculate total amount from items
-    let totalamount = 0;
-    if (items && items.length > 0) {
-      totalamount = items.reduce((sum, item) => sum + (item.qty * item.price), 0);
-=======
-exports.addPurchase = ({ invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items }) => 
-{
-  return new Promise((resolve, reject) => {
-    // Minimal check only: items must be an array and not empty
     if (!Array.isArray(items) || items.length === 0) {
       return reject(new Error("No purchase items provided"));
->>>>>>> e17f7941dbb5972d8e97dd32203882f229a4a475
     }
 
-    // Calculate total amount
-    let totalAmount = 0;
-    for (let item of items) {
-      totalAmount += item.price * item.quantity; // Assume controller validated this
-    }
+    let totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     db.beginTransaction(err => {
       if (err) return reject(err);
@@ -35,20 +23,13 @@ exports.addPurchase = ({ invoiceno, purchasedate, supplierid, paymentmode, gstin
         if (err1) return db.rollback(() => reject(err1));
 
         const purchaseId = result1.insertId;
-
-<<<<<<< HEAD
-        if (!items || items.length === 0) 
-          return resolve({ message: "Purchase added (no items)", purchaseId, totalamount });
-
-=======
->>>>>>> e17f7941dbb5972d8e97dd32203882f229a4a475
         const itemsSql = "INSERT INTO purchase_items (purchaseid, productid, quantity, price) VALUES ?";
         const itemValues = items.map(item => [purchaseId, item.productid, item.quantity, item.price]);
 
         db.query(itemsSql, [itemValues], (err2) => {
           if (err2) return db.rollback(() => reject(err2));
 
-          // Update stock for each product
+          // Update stock
           let updateStockPromises = items.map(item => {
             return new Promise((res, rej) => {
               db.query("UPDATE product SET stock = stock + ? WHERE pid = ?", [item.quantity, item.productid], (err3) => {
@@ -59,10 +40,6 @@ exports.addPurchase = ({ invoiceno, purchasedate, supplierid, paymentmode, gstin
           });
 
           Promise.all(updateStockPromises)
-<<<<<<< HEAD
-            .then(() => resolve({ message: "Purchase added successfully", purchaseId, totalamount }))
-            .catch(err => reject(err));
-=======
             .then(() => {
               db.commit(err3 => {
                 if (err3) return db.rollback(() => reject(err3));
@@ -70,144 +47,15 @@ exports.addPurchase = ({ invoiceno, purchasedate, supplierid, paymentmode, gstin
               });
             })
             .catch(err => db.rollback(() => reject(err)));
->>>>>>> e17f7941dbb5972d8e97dd32203882f229a4a475
         });
       });
     });
   });
 };
 
-<<<<<<< HEAD
-
-
-exports.viewPurchases=()=>
-{
-    return new Promise((resolve,reject)=>
-    {
-        let sql= `select p.id as purchaseid, p.invoiceno, p.purchasedate, p.supplierid,
-                   s.name as suppliername, p.totalamount, p.paymentmode, p.gstinvoice,
-
-                   pi.id as itemid, pi.productid, pr.pname as productname, pi.quantity,
-                   pi.price from purchase p join supplier s on p.supplierid = s.sid 
-                   join
-                   purchase_items pi on p.id = pi.purchaseid
-                   join 
-                   product pr on pi.productid = pr.pid
-                   order by 
-                   p.id desc
-              `;
-        db.query(sql,(err,result)=>
-        {
-            if(err)
-            {
-                return reject(err);
-            }
-            resolve(result);
-        });
-    });
-}
-
-exports.getPurchaseById=(id)=>
-{
-    return new Promise((resolve,reject)=>
-    {
-        let sql= `select p.id as purchaseid, p.invoiceno, p.purchasedate, p.supplierid,
-                          s.name as suppliername, p.totalamount, p.paymentmode, p.gstinvoice,
-                          pi.id as itemid, pi.productid, pr.pname as productname, 
-                          pi.quantity, pi.price 
-                          from purchase p 
-                          join supplier s on p.supplierid = s.sid 
-                          join purchase_items pi on p.id = pi.purchaseid
-                          join product pr on pi.productid = pr.pid
-                          where p.id = ?`;
-
-        db.query(sql,[id], (err,result)=> 
-        {
-            if(err) 
-            {
-                return reject(err);
-            }
-            else{
-            resolve(result);
-
-            }
-        });
-    });
-}
-
-exports.updatePurchaseById=(id,purchaseData)=>
-{
-    return new Promise((resolve,reject)=>
-    {
-        let {invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, items}= purchaseData;
-
-        let sqlPurchase = `update purchase set
-                              invoiceno = ?, 
-                              purchasedate = ?, 
-                              supplierid = ?, 
-                              totalamount = ?, 
-                              paymentmode = ?, 
-                              gstinvoice = ?
-                              where id = ?`;
-
-        db.query(sqlPurchase, [invoiceno, purchasedate, supplierid, totalamount, paymentmode, gstinvoice, id],(err,result)=> 
-        {
-            if (err) 
-                return reject(err);
-
-            // Update each purchase item one by one
-            let updateItemPromises=items.map(item=> 
-            {
-                return new Promise((res,rej)=> 
-                {
-                    let sqlUpdateItem= `update purchase_items 
-                                           set productid= ?, quantity= ?, price= ?
-                                           where id= ? and purchaseid= ?`;
-                    db.query(sqlUpdateItem, [item.productid, item.quantity, item.price, item.id, id],(err2)=> 
-                    {
-                        if(err2) 
-                        return rej(err2);
-                        res();
-                    });
-                });
-            });
-
-            //Wait for all item updates to finish
-            Promise.all(updateItemPromises)
-                .then(()=> resolve({message: "Purchase and items updated successfully." }))
-                .catch(err3=> reject(err3));
-        });
-    });
-}
-
-exports.deletePurchaseById=(id)=>{
-    return new Promise((resolve,reject)=>{
-        let sql = `delete from purchase where id = ?`;
-
-        db.query(sql,[id],(err,result)=>{
-            if(err){
-                return reject(err);
-            }
-            resolve(result);
-        });
-    });
-}
-
-
-
-
-
-exports.searchpurchase = (name) => {
-    return new Promise((resolve, reject) => {
-        db.query(
-            "SELECT * FROM category WHERE cname LIKE ?",
-            [`%${name}%`],
-            (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            }
-        );
-=======
+/**
+ * View All Purchases
+ */
 exports.viewPurchases = () => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -223,11 +71,13 @@ exports.viewPurchases = () => {
     db.query(sql, (err, result) => {
       if (err) return reject(err);
       resolve(result);
->>>>>>> e17f7941dbb5972d8e97dd32203882f229a4a475
     });
   });
 };
 
+/**
+ * Get Purchase by ID
+ */
 exports.getPurchaseById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -247,6 +97,9 @@ exports.getPurchaseById = (id) => {
   });
 };
 
+/**
+ * Update Purchase by ID
+ */
 exports.updatePurchaseById = (id, purchaseData) => {
   return new Promise((resolve, reject) => {
     const { invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items } = purchaseData;
@@ -255,106 +108,73 @@ exports.updatePurchaseById = (id, purchaseData) => {
       return reject(new Error("No items provided for update"));
     }
 
-    let totalAmount = 0;
-    for (let item of items) {
-      if (
-        !item ||
-        typeof item.productid !== "number" ||
-        typeof item.quantity !== "number" ||
-        typeof item.price !== "number" ||
-        typeof item.id !== "number"
-      ) {
-        return reject(new Error("Each item must have valid id, productid, quantity, and price"));
-      }
-      totalAmount += item.price * item.quantity;
-    }
+    let totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     db.beginTransaction(err => {
       if (err) return reject(err);
 
-      // Step 1: Get old items before update
-      const sqlOldItems = `SELECT productid, quantity FROM purchase_items WHERE purchaseid = ?`;
-      db.query(sqlOldItems, [id], (err, oldItems) => {
-        if (err) return db.rollback(() => reject(err));
+      // Step 1: Get old items
+      db.query("SELECT productid, quantity FROM purchase_items WHERE purchaseid = ?", [id], (err1, oldItems) => {
+        if (err1) return db.rollback(() => reject(err1));
 
         // Step 2: Revert old stock
-        const revertStockPromises = oldItems.map(item => {
+        let revertPromises = oldItems.map(item => {
           return new Promise((res, rej) => {
-            db.query(
-              "UPDATE product SET stock = stock - ? WHERE pid = ?",
-              [item.quantity, item.productid],
-              err => {
-                if (err) return rej(err);
-                res();
-              }
-            );
+            db.query("UPDATE product SET stock = stock - ? WHERE pid = ?", [item.quantity, item.productid], err => {
+              if (err) return rej(err);
+              res();
+            });
           });
         });
 
-        Promise.all(revertStockPromises)
+        Promise.all(revertPromises)
           .then(() => {
-            // Step 3: Update purchase data
+            // Step 3: Update purchase table
             const sqlPurchase = `
               UPDATE purchase
               SET invoiceno = ?, purchasedate = ?, supplierid = ?, totalamount = ?, paymentmode = ?, gstinvoice = ?
               WHERE id = ?
             `;
-            db.query(
-              sqlPurchase,
-              [invoiceno, purchasedate, supplierid, totalAmount, paymentmode, gstinvoice, id],
-              err1 => {
-                if (err1) return db.rollback(() => reject(err1));
+            db.query(sqlPurchase, [invoiceno, purchasedate, supplierid, totalAmount, paymentmode, gstinvoice, id], err2 => {
+              if (err2) return db.rollback(() => reject(err2));
 
-                // Step 4: Update purchase items
-                const updateItemPromises = items.map(item => {
-                  return new Promise((res, rej) => {
-                    const sqlUpdateItem = `
-                      UPDATE purchase_items
-                      SET productid = ?, quantity = ?, price = ?
-                      WHERE id = ? AND purchaseid = ?
-                    `;
-                    db.query(
-                      sqlUpdateItem,
-                      [item.productid, item.quantity, item.price, item.id, id],
-                      err2 => {
-                        if (err2) return rej(err2);
-                        res();
-                      }
-                    );
-                  });
+              // Step 4: Update items
+              let updateItemPromises = items.map(item => {
+                return new Promise((res, rej) => {
+                  db.query(
+                    "UPDATE purchase_items SET productid = ?, quantity = ?, price = ? WHERE id = ? AND purchaseid = ?",
+                    [item.productid, item.quantity, item.price, item.id, id],
+                    err3 => {
+                      if (err3) return rej(err3);
+                      res();
+                    }
+                  );
                 });
+              });
 
-                Promise.all(updateItemPromises)
-                  .then(() => {
-                    // Step 5: Apply new stock
-                    const applyNewStockPromises = items.map(item => {
-                      return new Promise((res, rej) => {
-                        db.query(
-                          "UPDATE product SET stock = stock + ? WHERE pid = ?",
-                          [item.quantity, item.productid],
-                          err3 => {
-                            if (err3) return rej(err3);
-                            res();
-                          }
-                        );
+              Promise.all(updateItemPromises)
+                .then(() => {
+                  // Step 5: Apply new stock
+                  let applyStockPromises = items.map(item => {
+                    return new Promise((res, rej) => {
+                      db.query("UPDATE product SET stock = stock + ? WHERE pid = ?", [item.quantity, item.productid], err4 => {
+                        if (err4) return rej(err4);
+                        res();
                       });
                     });
+                  });
 
-                    Promise.all(applyNewStockPromises)
-                      .then(() => {
-                        db.commit(err3 => {
-                          if (err3) return db.rollback(() => reject(err3));
-                          resolve({
-                            message: "Purchase and items updated successfully",
-                            totalAmount
-                          });
-                        });
-                      })
-                      .catch(err => db.rollback(() => reject(err)));
-                  })
-                  .catch(err => db.rollback(() => reject(err)));
-              }
-            );
+                  Promise.all(applyStockPromises)
+                    .then(() => {
+                      db.commit(err5 => {
+                        if (err5) return db.rollback(() => reject(err5));
+                        resolve({ message: "Purchase updated successfully", totalAmount });
+                      });
+                    })
+                    .catch(err => db.rollback(() => reject(err)));
+                })
+                .catch(err => db.rollback(() => reject(err)));
+            });
           })
           .catch(err => db.rollback(() => reject(err)));
       });
@@ -362,6 +182,9 @@ exports.updatePurchaseById = (id, purchaseData) => {
   });
 };
 
+/**
+ * Delete Purchase
+ */
 exports.deletePurchaseById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM purchase WHERE id = ?";
@@ -372,6 +195,9 @@ exports.deletePurchaseById = (id) => {
   });
 };
 
+/**
+ * Search Purchase
+ */
 exports.searchPurchase = (searchTerm) => {
   return new Promise((resolve, reject) => {
     const likeTerm = `%${searchTerm}%`;

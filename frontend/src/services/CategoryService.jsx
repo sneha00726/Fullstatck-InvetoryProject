@@ -1,6 +1,7 @@
-import axios from 'axios';
+import axios from "axios";
 
-const getToken = () => localStorage.getItem("token"); // JWT stored in localStorage
+// Helper to get JWT token from localStorage
+const getToken = () => localStorage.getItem("token");
 
 class CategoryService {
   getAuthHeaders() {
@@ -16,15 +17,19 @@ class CategoryService {
   }
 
   delCat(catId) {
-    return axios.delete(`http://localhost:3000/api/category/delete/${catId}`, this.getAuthHeaders());
+    return axios.delete(`http://localhost:3000/api/categories/delete/${catId}`, this.getAuthHeaders());
   }
 
   searchCategory(name) {
-    return axios.get(`http://localhost:3000/api/category/search/${name}`, this.getAuthHeaders());
+    return axios.get(`http://localhost:3000/api/categories/search/${name}`, this.getAuthHeaders());
   }
 
   updateCategory(catId, catData) {
-    return axios.put(`http://localhost:3000/api/category/update/${catId}`, catData, this.getAuthHeaders());
+    return axios.put(`http://localhost:3000/api/categories/update/${catId}`, catData, this.getAuthHeaders());
+  }
+
+  getCategoryById(catId) {
+    return axios.get(`http://localhost:3000/api/categories/${catId}`, this.getAuthHeaders());
   }
 }
 

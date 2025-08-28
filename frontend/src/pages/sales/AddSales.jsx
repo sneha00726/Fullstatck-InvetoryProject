@@ -77,7 +77,6 @@ const saveSale = () => {
     return;
   }
 
-<<<<<<< HEAD
   const items = saleProducts.map(p => ({ productId: parseInt(p.product_id), qty: parseInt(p.qty) }));
   const saleData = { 
     invoiceNo, 
@@ -86,35 +85,6 @@ const saveSale = () => {
     items, 
     paymentMode, 
     gstInvoice: 1 
-=======
-  const saveSale = () => {
-    if (!customer_id || saleProducts.length === 0) {
-      setMsg("Select customer and at least one product"); 
-      return;
-    }
-    if (!invoiceNo) { setMsg("Enter Invoice No"); return; }
-
-    const items = saleProducts.map(p => ({ productId: parseInt(p.product_id), qty: parseInt(p.qty) }));
-    const saleData = { invoiceNo, salesDate: new Date().toISOString().slice(0,10), customerId: parseInt(customer_id), items, paymentMode, gstInvoice: 1 };
-
-    const request = updateSaleId ? SalesService.updateSale(updateSaleId, saleData) : SalesService.addSale(saleData);
-
-    request.then(res => {
-
-      setMsg(updateSaleId ? " Sale updated successfully!" : ` Sale saved successfully! Total: ₹${calculateTotal().toFixed(2)}`);
-
-      setMsg(updateSaleId ? "Sale updated successfully!" : `Sale saved successfully! Total: ₹${calculateTotal().toFixed(2)}`);
-
-      setSaleProducts([{ product_id: "", qty: 1, product_price: 0, product_name: "" }]);
-      setCustomerId(""); setInvoiceNo(""); setUpdateSaleId(null);
-      loadSales();
-      setTab("view");
-    })
-    .catch(err => {
-      console.error(err.response ? err.response.data : err.message);
-      setMsg("Operation failed");
-    });
->>>>>>> e17f7941dbb5972d8e97dd32203882f229a4a475
   };
 
   const request = updateSaleId ? SalesService.updateSale(updateSaleId, saleData) : SalesService.addSale(saleData);

@@ -29,7 +29,7 @@ class CustService {
         });
     }
 
-    // 🔍 Search Customer
+    //  Search Customer
     searchCustomer(name) {
         let token = localStorage.getItem("token");
         return axios.get(`http://localhost:3000/api/customer/search/${name}`, {
