@@ -9,6 +9,7 @@ let purctrl=require("../controllers/purchasectrl.js");
 let salesctrl=require("../controllers/salesCtrl.js");
 let dash=require("../controllers/dashboard.js");
 let userctr=require("../controllers/userctrl.js");
+//const dashboardController = require("../controllers/dashboard.js");
 let router = express.Router();
 
 let { VerifyToken } = require("../middleware/authmiddleware.js");  
@@ -18,7 +19,7 @@ let authorizeRoles  = require("../middleware/authorized.js");
 router.get("/", ctrl.HomeLoginPage);
 router.post("/api/register", ctrl.RegisterApi);
 router.post("/api/login", ctrl.LoginPage);
-router.get("/dashboard",dash.dashboard);
+//router.get("/dashboard",dash.dashboard);
 
 // category api 
 router.post("/api/categories/add", VerifyToken, authorizeRoles("admin"), cat_ctrl.createCategory);
@@ -79,5 +80,13 @@ router.put("/api/users/update/:id", VerifyToken, authorizeRoles("admin"), userct
 router.delete("/api/users/delete/:id", VerifyToken, authorizeRoles("admin"), userctr.deleteUser);
 router.get("/api/users/search/:keyword", VerifyToken, authorizeRoles("admin"), userctr.searchUsers);
 
+/*
+
+router.get("/api/dashboard/total-products", VerifyToken, dashboardController.totalProducts);
+router.get("/api/dashboard/total-categories", VerifyToken, dashboardController.totalCategories);
+router.get("/api/dashboard/products-per-category", VerifyToken, dashboardController.productsPerCategory);
+router.get("/api/dashboard/sales-this-month", VerifyToken, dashboardController.salesThisMonth);
+router.get("/api/dashboard/monthly-sales", VerifyToken, dashboardController.monthlySales);
+*/
 module.exports = router;
 
