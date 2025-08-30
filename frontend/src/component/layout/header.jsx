@@ -1,6 +1,6 @@
 import React from "react";
 import "../../styles/headerfooter.css";
-
+import logo from "../../assets/INVENZA-.png";
 export default class Header extends React.Component 
 {
   render() 
@@ -9,7 +9,14 @@ export default class Header extends React.Component
       <>
         <nav className="navbar navbar-expand-lg bg-body-tertiary">
           <div className="container-fluid header">
-            <a className="navbar-brand" href="#home">Invento</a>
+            <a className="navbar-brand d-flex align-items-center" href="#home">
+              <img 
+                src={logo} 
+                alt="Invexa Logo" 
+                className="logo-img"
+              />
+              {/*<span className="ms-2">INVEXA</span>*/}
+            </a>
 
             <div className="collapse navbar-collapse option" id="navbarNav">
               <ul className="navbar-nav">

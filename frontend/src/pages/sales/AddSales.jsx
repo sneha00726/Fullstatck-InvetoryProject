@@ -3,6 +3,7 @@ import SalesService from "../../services/salesService";
 import CustService from "../../services/customerService";
 import ProductService from "../../services/ProductSerivce";
 import "../../styles/productdash.css";
+import { Modal, Button } from "react-bootstrap"; // ⬅️ added for popup
 
 export default function AddSales() {
   const [tab, setTab] = useState("add");
@@ -11,13 +12,16 @@ export default function AddSales() {
   const [invoiceNo, setInvoiceNo] = useState("");
   const [saleProducts, setSaleProducts] = useState([{ product_id: "", qty: 1, product_price: 0, product_name: "" }]);
   const [customer_id, setCustomerId] = useState("");
-  const [paymentMode, setPaymentMode] = useState("Cash"); // ✅ default
+  const [paymentMode, setPaymentMode] = useState("Cash");
   const [msg, setMsg] = useState("");
   const [sales, setSales] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
   const [updateSaleId, setUpdateSaleId] = useState(null);
+
+  // ⬅️ New state for preview modal
+  const [showPreview, setShowPreview] = useState(false);
 
   // Load customers, products, and sales
   useEffect(() => {
@@ -43,7 +47,7 @@ export default function AddSales() {
     list[index][field] = value;
 
     if (field === "product_id") {
-      const selected = products.find(p => p.pid === parseInt(value));
+      const selected = products.find(p => p.pid.toString() === value);
       if (selected) {
         list[index].product_price = selected.price;
         list[index].product_name = selected.pname;
@@ -52,7 +56,7 @@ export default function AddSales() {
     }
 
     if (field === "qty") {
-      const selected = products.find(p => p.pid === parseInt(list[index].product_id));
+      const selected = products.find(p => p.pid.toString() === list[index].product_id);
       if (selected && value > selected.stock) {
         list[index].qty = selected.stock;
       }
@@ -63,6 +67,7 @@ export default function AddSales() {
 
   const addProductRow = () =>
     setSaleProducts([...saleProducts, { product_id: "", qty: 1, product_price: 0, product_name: "" }]);
+
   const removeProductRow = index => {
     const list = [...saleProducts];
     list.splice(index, 1);
@@ -72,7 +77,8 @@ export default function AddSales() {
   const calculateTotal = () =>
     saleProducts.reduce((sum, p) => sum + p.qty * parseFloat(p.product_price || 0), 0);
 
-  const saveSale = () => {
+  // ⬅️ Instead of saving directly, open preview modal
+  const handleSaveClick = () => {
     if (!customer_id || saleProducts.length === 0) {
       window.alert("Select customer and at least one product");
       return;
@@ -81,7 +87,11 @@ export default function AddSales() {
       window.alert("Enter Invoice No");
       return;
     }
+    setShowPreview(true);
+  };
 
+  // ⬅️ Confirm from modal -> then call actual save
+  const saveSale = () => {
     const items = saleProducts.map(p => ({
       productId: parseInt(p.product_id),
       qty: parseInt(p.qty),
@@ -92,7 +102,7 @@ export default function AddSales() {
       salesDate: new Date().toISOString().slice(0, 10),
       customerId: parseInt(customer_id),
       items,
-      paymentMode, // ✅ included
+      paymentMode,
       gstInvoice: 1,
     };
 
@@ -104,20 +114,22 @@ export default function AddSales() {
       .then(res => {
         window.alert(
           `Sale ${updateSaleId ? "updated" : "added"} successfully!\n` +
-            `Total: ₹${(res.data.totalAmount || calculateTotal()).toFixed(2)}`
+          `Total: ₹${(res.data.totalAmount || calculateTotal()).toFixed(2)}`
         );
 
         setSaleProducts([{ product_id: "", qty: 1, product_price: 0, product_name: "" }]);
         setCustomerId("");
         setInvoiceNo("");
-        setPaymentMode("Cash"); // ✅ reset to default
+        setPaymentMode("Cash");
         setUpdateSaleId(null);
         loadSales();
         setTab("view");
+        setShowPreview(false); // close modal
       })
       .catch(err => {
         console.error(err.response?.data || err.message);
         window.alert("❌ Operation failed. Please try again!");
+        setShowPreview(false);
       });
   };
 
@@ -141,10 +153,10 @@ export default function AddSales() {
 
     SalesService.deleteSale(sale.salesID)
       .then(() => {
-        window.alert("✅ Sale deleted successfully!");
+        window.alert(" Sale deleted successfully!");
         loadSales();
       })
-      .catch(() => window.alert("❌ Failed to delete sale"));
+      .catch(() => window.alert("Failed to delete sale"));
   };
 
   const handleUpdate = invoiceNo => {
@@ -153,23 +165,42 @@ export default function AddSales() {
 
     const sale = items[0];
     setInvoiceNo(invoiceNo);
-    setCustomerId(sale.customer_id);
-    setPaymentMode(sale.paymentMode); // ✅ prefill payment mode
+    setCustomerId(sale.customer_id.toString());
+    setPaymentMode(sale.paymentMode);
     setUpdateSaleId(sale.salesID);
 
-    // Prefill existing products correctly
     const updatedProducts = items.map(item => {
-      const product = products.find(p => p.pid === item.productId);
+      const product = products.find(p => Number(p.pid) === Number(item.productId));
       return {
-        product_id: item.productId,
+        product_id: item.productId?.toString() || "",
         qty: item.qty,
         product_price: product ? product.price : item.product_price || 0,
-        product_name: product ? product.pname : item.product_name,
+        product_name: product ? product.pname : item.product_name || "",
       };
     });
 
-    setSaleProducts(updatedProducts.length > 0 ? updatedProducts : [{ product_id: "", qty: 1, product_price: 0, product_name: "" }]);
+    setSaleProducts(
+      updatedProducts.length > 0
+        ? updatedProducts
+        : [{ product_id: "", qty: 1, product_price: 0, product_name: "" }]
+    );
+
     setTab("add");
+  };
+
+  // ✅ Download Invoice
+  const handleDownload = (saleId, invoiceNo) => {
+    SalesService.downloadInvoice(saleId)
+      .then((res) => {
+        const url = window.URL.createObjectURL(new Blob([res.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `invoice_${invoiceNo}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
+      .catch(() => window.alert("❌ Failed to download invoice"));
   };
 
   return (
@@ -189,17 +220,19 @@ export default function AddSales() {
       {tab === "add" && (
         <div className="card p-4">
           <h4>{updateSaleId ? "Update Sale" : "Add Sale"}</h4>
+
           <div className="mb-3">
             <label>Customer</label>
             <select className="form-control" value={customer_id} onChange={e => setCustomerId(e.target.value)}>
               <option value="">Select Customer</option>
               {customers.map(c => (
-                <option key={c.id} value={c.id}>
+                <option key={c.id} value={c.id.toString()}>
                   {c.name}
                 </option>
               ))}
             </select>
           </div>
+
           <div className="mb-3">
             <label>Invoice No</label>
             <input
@@ -211,14 +244,10 @@ export default function AddSales() {
             />
           </div>
 
-          {/* ✅ Payment Mode Dropdown */}
+          {/* Payment Mode */}
           <div className="mb-3">
             <label>Payment Mode</label>
-            <select
-              className="form-control"
-              value={paymentMode}
-              onChange={e => setPaymentMode(e.target.value)}
-            >
+            <select className="form-control" value={paymentMode} onChange={e => setPaymentMode(e.target.value)}>
               <option value="Cash">Cash</option>
               <option value="Card">Card</option>
               <option value="UPI">UPI</option>
@@ -226,26 +255,24 @@ export default function AddSales() {
             </select>
           </div>
 
+          {/* Products */}
           {saleProducts.map((item, index) => (
             <div className="row mb-2" key={index}>
               <div className="col">
                 <select
                   className="form-control"
                   value={item.product_id}
-                  onChange={e => handleProductChange(index, "product_id", parseInt(e.target.value))}
+                  onChange={e => handleProductChange(index, "product_id", e.target.value)}
                 >
                   <option value="">Select Product</option>
                   {products.map(p => (
-                    <option
-                      key={p.pid}
-                      value={p.pid}
-                      disabled={p.stock <= 0 && p.pid !== item.product_id}
-                    >
-                      {p.pname} {p.stock <= 0 && p.pid !== item.product_id ? "(Out of stock)" : `(Stock: ${p.stock})`}
+                    <option key={p.pid} value={p.pid.toString()} disabled={p.stock <= 0 && p.pid.toString() !== item.product_id}>
+                      {p.pname} {p.stock <= 0 && p.pid.toString() !== item.product_id ? "(Out of stock)" : `(Stock: ${p.stock})`}
                     </option>
                   ))}
                 </select>
               </div>
+
               <div className="col">
                 <input
                   type="number"
@@ -253,12 +280,14 @@ export default function AddSales() {
                   className="form-control"
                   value={item.qty}
                   onChange={e => handleProductChange(index, "qty", parseInt(e.target.value))}
-                  max={products.find(p => p.pid === parseInt(item.product_id))?.stock || 1}
+                  max={products.find(p => p.pid.toString() === item.product_id)?.stock || 1}
                 />
               </div>
+
               <div className="col">
                 <input type="text" className="form-control" value={item.product_price} readOnly />
               </div>
+
               <div className="col-auto">
                 {saleProducts.length > 1 && (
                   <button className="btn btn-danger" onClick={() => removeProductRow(index)}>
@@ -272,18 +301,65 @@ export default function AddSales() {
           <button className="btn btn-secondary mb-3" onClick={addProductRow}>
             Add Product
           </button>
+
           <div className="mb-3">
             <strong>Total Amount: ₹{calculateTotal().toFixed(2)}</strong>
           </div>
-          <button className="btn btn-success w-100" onClick={saveSale}>
+
+          {/* ⬅️ Now opens Preview instead of direct save */}
+          <button className="btn btn-success w-100" onClick={handleSaveClick}>
             {updateSaleId ? "Update Sale" : "Save Sale"}
           </button>
         </div>
       )}
 
-      {/* View Sales */}
+      {/* Bill Preview Modal */}
+      <Modal show={showPreview} onHide={() => setShowPreview(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Bill Preview</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <h5>Customer: {customers.find(c => c.id.toString() === customer_id)?.name || "N/A"}</h5>
+          <h6>Invoice No: {invoiceNo}</h6>
+          <h6>Payment Mode: {paymentMode}</h6>
+          <hr />
+          <table className="table table-bordered">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {saleProducts.map((p, i) => (
+                <tr key={i}>
+                  <td>{i + 1}</td>
+                  <td>{p.product_name}</td>
+                  <td>{p.qty}</td>
+                  <td>₹{p.product_price}</td>
+                  <td>₹{(p.qty * p.product_price).toFixed(2)}</td>
+                </tr>
+              ))}
+              <tr>
+                <td colSpan="4" className="text-end fw-bold">Total</td>
+                <td>₹{calculateTotal().toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowPreview(false)}>Cancel</Button>
+          <Button variant="success" onClick={saveSale}>Confirm & Save</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* View Sales (unchanged) */}
       {tab === "view" && (
         <div>
+          {/* ... your existing view sales table & pagination code ... */}
           <div className="mb-3">
             <input
               type="text"
@@ -299,7 +375,7 @@ export default function AddSales() {
           ) : (
             paginatedInvoices.map(inv => {
               const items = groupedSales[inv];
-              const { customer_name, email, company_name, salesDate, totalAmount, paymentMode } = items[0];
+              const { customer_name, email, company_name, salesDate, totalAmount, paymentMode, salesID } = items[0];
               return (
                 <div className="card mb-4" key={inv}>
                   <div className="card-header d-flex justify-content-between align-items-center">
@@ -308,11 +384,15 @@ export default function AddSales() {
                       {new Date(salesDate).toLocaleDateString()} | Payment: {paymentMode} | Total: ₹{totalAmount}
                     </div>
                     <div>
-                      <button className="btn btn-sm btn-warning me-2" onClick={() => handleUpdate(inv)}>
+                      <button className="btn btn-sm btn-warning me-2 d-none"  onClick={() => handleUpdate(inv)}>
                         Update
                       </button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDelete(inv)}>
+                      <button className="btn btn-sm btn-danger me-2" onClick={() => handleDelete(inv)}>
                         Delete
+                      </button>
+                      {/*  Download Invoice Button */}
+                      <button className="btn btn-sm btn-info" onClick={() => handleDownload(salesID, inv)}>
+                        Download
                       </button>
                     </div>
                   </div>
@@ -358,8 +438,9 @@ export default function AddSales() {
               Next
             </button>
           </div>
+
         </div>
       )}
     </div>
   );
-};
+}

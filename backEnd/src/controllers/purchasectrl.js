@@ -1,81 +1,56 @@
 let purModel = require("../models/purchasemodel.js");
 let { validatePurchase } = require("../validation/purchasevalidation.js");
 
-// ✅ Add Purchase
 exports.addPurchase = async (req, res) => {
   const { invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items } = req.body;
 
-  // Validation
   const errors = validatePurchase(invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items);
-  if (errors.length > 0) {
-    return res.status(400).json({ errors });
-  }
-
-  // Calculate total amount
-  let totalamount = 0;
-  if (items && Array.isArray(items)) {
-    totalamount = items.reduce((sum, item) => sum + (item.qty * item.price), 0);
-  }
+  if (errors.length) return res.status(400).json({ errors });
 
   try {
-    const result = await purModel.addPurchase({
-      invoiceno,
-      purchasedate,
-      supplierid,
-      totalamount,
-      paymentmode,
-      gstinvoice,
-      items
-    });
-
-    res.status(201).json({ 
-      message: "Purchase added successfully", 
-      purchaseId: result.purchaseId, 
-      totalamount 
-    });
+    const result = await purModel.addPurchase({ invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items });
+    res.status(201).json(result);
   } catch (err) {
-    console.error("Error while saving purchase", err);
+    console.error(err);
     res.status(500).json({ error: err.message || "Internal Server Error" });
   }
 };
 
-// ✅ View all purchases
+// View all purchases
 exports.viewPurchases = async (req, res) => {
-  try {
-    const purchases = await purModel.viewPurchases();
-    res.json(purchases);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch purchases" });
-  }
-};
-
-// ✅ Get purchase by ID
-exports.getPurchaseById = async (req, res) => {
-  try {
-    const purchase = await purModel.getPurchaseById(req.params.id);
-    if (!purchase || purchase.length === 0) {
-      return res.status(404).json({ error: "Purchase not found" });
+    try {
+        const purchases = await purModel.viewPurchases();
+        res.json(purchases);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to fetch purchases" });
     }
-    res.json(purchase);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch purchase" });
-  }
 };
 
-// ✅ Update purchase
+// Get purchase by ID
+exports.getPurchaseById = async (req, res) => {
+    try {
+        const purchase = await purModel.getPurchaseById(req.params.id);
+        if (!purchase || purchase.length === 0) return res.status(404).json({ error: "Purchase not found" });
+        res.json(purchase);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to fetch purchase" });
+    }
+};
+
+// Update purchase
 exports.updatePurchaseById = async (req, res) => {
-  try {
-    const result = await purModel.updatePurchaseById(req.params.id, req.body);
-    res.json(result);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message || "Failed to update purchase" });
-  }
+    try {
+        const result = await purModel.updatePurchaseById(req.params.id, req.body);
+        res.json(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message || "Failed to update purchase" });
+    }
 };
 
-// ✅ Delete purchase
+// Delete purchase
 exports.deletePurchaseById = async (req, res) => {
   const id = parseInt(req.params.id);
   if (!id) return res.status(400).json({ error: "Invalid purchase id" });
@@ -89,20 +64,18 @@ exports.deletePurchaseById = async (req, res) => {
   }
 };
 
-// ✅ Search purchase
+// Search purchase
 exports.purchasesearch = async (req, res) => {
-  try {
-    const searchTerm = req.params.name;
-    if (!searchTerm) return res.status(400).json({ error: "Search term is required" });
+    try {
+        const searchTerm = req.params.name;
+        if (!searchTerm) return res.status(400).json({ error: "Search term is required" });
 
-    const results = await purModel.searchPurchase(searchTerm);
-    if (results.length === 0) {
-      return res.status(404).json({ message: "No matching purchases found" });
-    }
+        const results = await purModel.searchPurchase(searchTerm);
+        if (results.length === 0) return res.status(404).json({ message: "No matching purchases found" });
 
-    res.json(results);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to search purchases" });
-  }
+        res.json(results);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to search purchases" });
+    }
 };

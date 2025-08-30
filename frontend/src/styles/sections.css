@@ -39,7 +39,7 @@
   flex-wrap: wrap;
   justify-content: center; /* Center horizontally */
   align-items: center; /* Center vertically */
-  background-color:rgb(188, 204, 220);
+  background-color:rgb(242, 242, 242);
   padding: 20px;
   box-sizing: border-box;
 }

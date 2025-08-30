@@ -1,13 +1,24 @@
 .header{
-    height: 50px;
-   background-color:rgb(182, 180, 180);
+    height: 60px;
+   background-color:rgb(255, 255, 255);
     color:rgb(0, 0, 0);
     display: flex;
     align-items: center;
   justify-content: space-around;
+  margin: 0px;
 }
 .option{
     display: flex;
     justify-content: end;
-   color:black;
+   color:rgb(0, 0, 0);
+}
+.logo-img {
+  margin-top: 25px;
+  height: 270px;  /* adjust size */
+  width: auto;
+}
+.navbar-brand span {
+  font-weight: bold;
+  font-size: 18px;
+  color: black;
 }

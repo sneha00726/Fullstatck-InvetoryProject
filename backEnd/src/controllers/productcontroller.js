@@ -92,32 +92,30 @@ exports.updateProdById=(req,res)=>
     });
 }
 
-exports.deleteProdById=(req,res)=>
-{
-    let id=req.params.id;
-    let error=validateId(id);
-    if(error)
-    {
-        res.status(400).json(error);
+exports.deleteProdById = (req, res) => {
+    const id = req.params.id;
+    const { status } = req.body || {}; // optional, defaults to 'inactive'
+
+    const error = validateId(id);
+    if (error) {
+        return res.status(400).json(error);
     }
-    let promise=pmodel.deleteProdById(id);
-    promise.then((result)=>
-    {
-        if(result.affectedRows === 0)
-        {
-             res.status(404).json({'message':'Record not Deleted'});
-            //console.log("Product not deleted");
-        }
-        else
-        {
-            res.status(200).json({'message':'Record Deleted'});
-        }
-    }).catch((err)=>
-    {
-       res.status(404).json({'message':'Record not Deleted'+err});
-        //console.log("Product not deleted");
-    });
-}
+
+    // Use default 'inactive' if no status is provided
+    const newStatus = status || 'inactive';
+
+    pmodel.deleteProdById(id, newStatus)
+        .then((result) => {
+            if (result.affectedRows === 0) {
+                res.status(404).json({ message: "Record not updated" });
+            } else {
+                res.status(200).json({ message: `Product ${newStatus} successfully` });
+            }
+        })
+        .catch((err) => {
+            res.status(500).json({ message: "Failed to update product status", error: err.message });
+        });
+};
 
 exports.searchProdByName = (req, res) => {
     let name = req.params.name; 

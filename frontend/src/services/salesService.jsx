@@ -31,6 +31,12 @@ class SaleService {
   searchSale(name) {
     return axios.get(`${API_URL}/search/${name}`, this.getAuthHeaders());
   }
+  downloadInvoice(id) {
+  return axios.get(`${API_URL}/download/${id}`, {
+    ...this.getAuthHeaders(),
+    responseType: "blob", // 👈 important for file download
+  });
+}
 }
 
 export default new SaleService();

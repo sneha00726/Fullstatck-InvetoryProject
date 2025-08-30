@@ -70,6 +70,7 @@ router.put("/api/sales/update/:id", VerifyToken, authorizeRoles("admin","user"),
 router.delete("/api/sales/delete/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.deleteSalesById);
 router.get("/api/sales/search/:invoice", VerifyToken, authorizeRoles("admin","user"),salesctrl.salesSearch);
 
+router.get("/api/sales/download/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.downloadInvoice);
 //usermange
 router.post("/api/users/add", VerifyToken, authorizeRoles("admin"), userctr.addUser);
 router.get("/api/users/view", VerifyToken, authorizeRoles("admin"), userctr.viewUsers);

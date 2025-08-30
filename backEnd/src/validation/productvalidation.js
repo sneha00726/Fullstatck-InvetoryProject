@@ -2,9 +2,24 @@ exports.validateProduct = (pname, price, cid, stock) => {
     let errors = [];
 
     // Product name
-    if (!pname || typeof pname !== "string" || pname.trim() === "") {
+     if (!pname || typeof pname !== "string" || pname.trim() === "") {
         errors.push("Product name is required.");
+    } else {
+        for (let i = 0; i < pname.length; i++) {
+            let ch = pname[i];
+
+            // Allow only uppercase, lowercase letters and space
+            if (!(
+                (ch >= "A" && ch <= "Z") ||
+                (ch >= "a" && ch <= "z") ||
+                ch === " "
+            )) {
+                errors.push("Product name must contain only alphabets and spaces.");
+                break; // stop checking further once invalid char found
+            }
+        }
     }
+
 
     // Price
     price = Number(price);

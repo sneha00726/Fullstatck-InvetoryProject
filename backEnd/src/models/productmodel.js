@@ -23,25 +23,14 @@ exports.saveProduct = (pname, price, cid, stock) => {
 };
 
 
-exports.viewProducts=()=>
-{
-    return new Promise((resolve,reject)=>
-    {
-        db.query("select *from product",
-        (err,result)=>
-        {
-            if(err)
-            {
-                reject(err);
-            }
-            else
-            {
-                resolve(result);
-            }
+exports.viewProducts = () => {
+    return new Promise((resolve, reject) => {
+        db.query(` select *from product`, (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
         });
     });
-}
-
+};
 exports.getProdById=(id)=>
 {
     return new Promise((resolve, reject)=>
@@ -77,23 +66,18 @@ exports.updateProdById=(id,pname,price,cid)=>{
     });
 }
 
-exports.deleteProdById=(id)=>{
-    return new Promise((resolve,reject)=>
-    {
-        db.query("delete from product WHERE pid = ?",[id],
-        (err,result)=>
-        {
-            if(err)
-            {
-                reject(err);
+exports.deleteProdById = (id, status) => {
+    return new Promise((resolve, reject) => {
+        db.query(
+            "UPDATE product SET status=? WHERE pid=?",
+            [status, id],
+            (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
             }
-            else
-            {
-                resolve(result);
-            }
-        });
+        );
     });
-}
+};
 
 exports.searchProdByName = (name) => {
     return new Promise((resolve, reject) => {

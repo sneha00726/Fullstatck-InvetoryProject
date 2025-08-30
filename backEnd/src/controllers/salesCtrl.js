@@ -1,5 +1,10 @@
 
 let salesModel = require("../models/salesmodel.js");
+const PDFDocument = require("pdfkit");
+const fs = require("fs");
+const path = require("path");
+
+require("pdfkit-table");
 
 exports.addSale = (req, res) => {
     let { invoiceNo, salesDate, customerId, items, paymentMode, gstInvoice } = req.body;
@@ -77,4 +82,61 @@ exports.salesSearch = (req, res) => {
     }).catch((err) => {
         res.status(500).json({ error: err.message });
     });
+};
+
+
+
+exports.downloadInvoice = (req, res) => {
+  const { id } = req.params; // saleId
+
+  salesModel.getInvoiceData(id, (err, rows) => {
+    if (err || rows.length === 0) {
+      return res.status(500).send("Invoice not found");
+    }
+
+    const sale = rows[0];
+    const doc = new PDFDocument();
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=invoice_${sale.invoiceNo}.pdf`
+    );
+
+    doc.pipe(res);
+
+    // Logo
+    try {
+      doc.image("public/Imges/INVENZA-.png", 30, 20, { width: 200 });
+    } catch (e) {
+      console.log("Logo not found, skipping...");
+    }
+
+    doc.moveDown(3);
+
+    // Header
+    doc.fontSize(20).text("Invoice", { align: "right" }).moveDown();
+    doc.fontSize(12).text(`Invoice No: ${sale.invoiceNo}`);
+    doc.text(`Date: ${new Date(sale.salesDate).toLocaleDateString()}`);
+    doc.text(`Customer: ${sale.customer_name} (${sale.company_name})`);
+    doc.text(`Email: ${sale.email}`);
+    doc.text(`Payment Mode: ${sale.paymentMode}`).moveDown();
+
+    // Table
+    doc.fontSize(12).text("Products:", { underline: true }).moveDown();
+    rows.forEach((item, idx) => {
+      doc.text(
+        `${idx + 1}. ${item.pname} - Qty: ${item.qty} x ₹${item.rate} = ₹${(
+          item.qty * item.rate
+        ).toFixed(2)}`
+      );
+    });
+
+    // Total
+    doc.moveDown()
+      .fontSize(14)
+      .text(`Total Amount: ₹${sale.totalAmount}`, { align: "right" });
+
+    doc.end();
+  });
 };

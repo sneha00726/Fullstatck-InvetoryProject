@@ -27,11 +27,14 @@ class ProductService {
   }
 
   // Delete product (Admin only)
-  delProd(prodId) {
+  delProd(prodId, status) {
     return axios.delete(
       `http://localhost:3000/api/products/delete/${prodId}`,
-      this.getAuthHeaders()
-    );
+      {
+        ...this.getAuthHeaders(),
+        data: { status } // DELETE with body
+      }
+    )
   }
 
   // Update product (Admin only)

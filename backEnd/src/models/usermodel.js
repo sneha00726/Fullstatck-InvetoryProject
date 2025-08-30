@@ -5,7 +5,7 @@ let bcrypt = require("bcrypt");
 exports.createUser = async (name, email, role, password) => {
   return new Promise(async (resolve, reject) => {
     try {
-      // Check if email already exists
+      
       db.query(`SELECT * FROM user WHERE email = ?`, [email], async (err, results) => {
         if (err) return reject(err);
 

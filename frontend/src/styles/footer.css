@@ -19,13 +19,13 @@ html {
 }
 
 .footer-container {
-  margin-top: 40px;
+  margin-top: 20px;
 }
 
 .footer-main {
   background-color: #3e4551;
   color: white;
-  padding: 20px 0;
+  padding: 10px 0;
 }
 
 .footer-main h5 {

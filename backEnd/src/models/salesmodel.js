@@ -233,3 +233,21 @@ exports.searchsales = (invoiceNo ) => {
         );
     });
 };
+
+
+exports.getInvoiceData = (saleId, callback) => {
+  const query = `
+    SELECT s.salesID,s.invoiceNo,s.salesDate,s.totalAmount,s.paymentMode,
+           c.name as customer_name,c.company_name,c.email,
+           p.pname, si.qty, si.rate
+    FROM sales s 
+    JOIN customer c ON s.customerId=c.id 
+    JOIN sales_items si ON s.salesID=si.salesID 
+    JOIN product p ON si.productId=p.pid
+    WHERE s.salesID=?`;
+
+  db.query(query, [saleId], (err, rows) => {
+    if (err) return callback(err, null);
+    callback(null, rows);
+  });
+};

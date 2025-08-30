@@ -15,15 +15,13 @@ export default function Footer() {
   return (
     <div id="footer" className="footer-container">
       <footer className="footer-main">
-        <div className="container p-4 bg-dark text-white">
+        <div className="container p-1 bg-dark text-white">
           <section>
             <div className="row">
               <div className="col-lg-4 col-md-6 mb-4 mb-md-0 text-uppercase">
                 <h5>Contact</h5>
                 <p>
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                  Molestiae modi cum ipsam ad, illo possimus laborum ut
-                  reiciendis obcaecati.
+                 "Smarter Inventory. Simpler Business."
                 </p>
               </div>
 
@@ -81,8 +79,7 @@ export default function Footer() {
         </div>
 
         <div className="footer-bottom text-center bg-secondary p-2">
-          © 2025 Copyright:
-          <a href="https://mdbootstrap.com/" className="text-white ms-1"> MDBootstrap.com</a>
+           © {new Date().getFullYear()} INVEXA. All Rights Reserved.
         </div>
       </footer>
     </div>

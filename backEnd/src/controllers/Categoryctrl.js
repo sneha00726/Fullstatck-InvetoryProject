@@ -6,7 +6,7 @@ exports.createCategory=(req,res)=>
      if (!cname) {
         return res.status(400).json({ message: "Category name is required" });  //if name is empty
     }
-   // console.log("im in controller");
+   
     let promise=model_cat.CreateCategoryAdd(cname);
     promise.then((result)=>
     {
