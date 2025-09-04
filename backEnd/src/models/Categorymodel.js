@@ -22,7 +22,7 @@ exports.CreateCategoryAdd = (name) => {
 // Get all categories
 exports.getViewCategory = () => {
     return new Promise((resolve, reject) => {
-        db.query("SELECT * FROM category ", (err, result) => {
+        db.query("SELECT * FROM category ORDER BY cid DESC", (err, result) => {
             if (err) reject(err);
             else resolve(result);
         });
@@ -47,21 +47,18 @@ exports.CategoryUpdate = (id, name) => {
     });
 };
 
-// Delete category + its productsdd
+// Delete category + its products
 exports.CategoryDelete = (id) => {
   return new Promise((resolve, reject) => {
-    // Deactivate category
-    db.query("UPDATE category SET status='inactive' WHERE cid=?", [id], (err, result) => {
-      if (err) return reject(err);
-
-      // Deactivate related products
-      db.query("UPDATE product SET status='inactive' WHERE cid=?", [id], (err2) => {
-        if (err2) return reject(err2);
-        resolve({ message: "Category and related products deactivated successfully" });
-      });
+    db.query("DELETE FROM category WHERE cid=?", [id], (err, result) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(result);
     });
   });
 };
+
 // Search category by name
 exports.categorysearch = (name) => {
     return new Promise((resolve, reject) => {

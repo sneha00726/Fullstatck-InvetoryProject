@@ -27,11 +27,6 @@ exports.validateProduct = (pname, price, cid, stock) => {
         errors.push("Valid price is required.");
     }
 
-    // Category ID
-    cid = Number(cid);
-    if (isNaN(cid) || cid <= 0) {
-        errors.push("Valid category Id is required.");
-    }
 
     // Stock
     stock = Number(stock);
