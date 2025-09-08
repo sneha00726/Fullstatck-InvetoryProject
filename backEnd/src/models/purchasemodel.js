@@ -1,7 +1,7 @@
 let db = require("../../db.js");
-/**
- * Add Purchase
- */
+/*
+Add Purchase
+*/
 
 // Add a new purchase
 exports.addPurchase = ({ invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items }) => {
