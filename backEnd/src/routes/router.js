@@ -9,7 +9,6 @@ let purctrl=require("../controllers/purchasectrl.js");
 let salesctrl=require("../controllers/salesCtrl.js");
 let dash=require("../controllers/dashboard.js");
 let userctr=require("../controllers/userctrl.js");
-//const dashboardController = require("../controllers/dashboard.js");
 let router = express.Router();
 
 let { VerifyToken } = require("../middleware/authmiddleware.js");  
@@ -28,8 +27,6 @@ router.get("/api/categories/:id", VerifyToken, authorizeRoles("admin"),  cat_ctr
 router.put("/api/categories/update/:id",  VerifyToken, authorizeRoles("admin"), cat_ctrl.UpdateCategory);
 router.delete("/api/categories/delete/:id", VerifyToken, authorizeRoles("admin"),cat_ctrl.DeleteCategory);
 router.get("/api/categories/search/:name", VerifyToken, authorizeRoles("admin","user"),cat_ctrl.searchCategory);
-
-
 
 //product
 router.post("/api/products/add", VerifyToken, authorizeRoles("admin"), pctrl.addProduct);
@@ -63,7 +60,7 @@ router.put("/api/purchases/update/:id", VerifyToken, authorizeRoles("admin"),pur
 router.delete("/api/purchases/delete/:id", VerifyToken, authorizeRoles("admin"),purctrl.deletePurchaseById);
 router.get("/api/purchases/search/:name", VerifyToken, authorizeRoles("admin"),purctrl.purchasesearch);
 
-//salesa
+//sales
 router.post("/api/sales/add", VerifyToken, authorizeRoles("admin","user"),salesctrl.addSale);
 router.get("/api/sales/view",VerifyToken, authorizeRoles("admin","user"),salesctrl.ViewAllSales);
 router.get("/api/sales/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.GetbyIDSales);
@@ -71,7 +68,6 @@ router.put("/api/sales/update/:id", VerifyToken, authorizeRoles("admin","user"),
 router.delete("/api/sales/delete/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.deleteSalesById);
 router.get("/api/sales/search/:invoice", VerifyToken, authorizeRoles("admin","user"),salesctrl.salesSearch);
 
-router.get("/api/sales/download/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.downloadInvoice);
 //usermange
 router.post("/api/users/add", VerifyToken, authorizeRoles("admin"), userctr.addUser);
 router.get("/api/users/view", VerifyToken, authorizeRoles("admin"), userctr.viewUsers);
@@ -80,13 +76,5 @@ router.put("/api/users/update/:id", VerifyToken, authorizeRoles("admin"), userct
 router.delete("/api/users/delete/:id", VerifyToken, authorizeRoles("admin"), userctr.deleteUser);
 router.get("/api/users/search/:keyword", VerifyToken, authorizeRoles("admin"), userctr.searchUsers);
 
-/*
-
-router.get("/api/dashboard/total-products", VerifyToken, dashboardController.totalProducts);
-router.get("/api/dashboard/total-categories", VerifyToken, dashboardController.totalCategories);
-router.get("/api/dashboard/products-per-category", VerifyToken, dashboardController.productsPerCategory);
-router.get("/api/dashboard/sales-this-month", VerifyToken, dashboardController.salesThisMonth);
-router.get("/api/dashboard/monthly-sales", VerifyToken, dashboardController.monthlySales);
-*/
 module.exports = router;
 
