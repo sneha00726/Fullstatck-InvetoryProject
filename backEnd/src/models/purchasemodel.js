@@ -1,6 +1,4 @@
 let db = require("../../db.js");
-
-
 /**
  * Add Purchase
  */

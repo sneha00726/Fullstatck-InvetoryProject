@@ -3,7 +3,7 @@ let db = require("../../db.js");
 exports.saveProduct = (pname, price, cid, stock) => {
     return new Promise((resolve, reject) => {
 
-        // 1️⃣ Check for duplicate product name
+        //  Check for duplicate product name
         const checkSql = "SELECT pid FROM product WHERE pname = ?";
         db.query(checkSql, [pname], (err, results) => {
             if (err) return reject(err);
@@ -23,14 +23,25 @@ exports.saveProduct = (pname, price, cid, stock) => {
 };
 
 
-exports.viewProducts = () => {
-    return new Promise((resolve, reject) => {
-        db.query(` select *from product`, (err, result) => {
-            if (err) reject(err);
-            else resolve(result);
+exports.viewProducts=()=>
+{
+    return new Promise((resolve,reject)=>
+    {
+        db.query("select *from product",
+        (err,result)=>
+        {
+            if(err)
+            {
+                reject(err);
+            }
+            else
+            {
+                resolve(result);
+            }
         });
     });
-};
+}
+
 exports.getProdById=(id)=>
 {
     return new Promise((resolve, reject)=>
@@ -65,18 +76,17 @@ exports.updateProdById=(id,pname,price,cid)=>{
         });
     });
 }
-
-exports.deleteProdById = (id, status) => {
-    return new Promise((resolve, reject) => {
-        db.query(
-            "UPDATE product SET status=? WHERE pid=?",
-            [status, id],
-            (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            }
-        );
-    });
+exports.deleteProdById = (id) => {
+  return new Promise((resolve, reject) => {
+    db.query(
+      "DELETE FROM product WHERE pid = ?",
+      [id],
+      (err, result) => {
+        if (err) return reject(err);  // No foreign key conflict anymore
+        resolve(result);
+      }
+    );
+  });
 };
 
 exports.searchProdByName = (name) => {

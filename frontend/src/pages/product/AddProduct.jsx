@@ -35,11 +35,12 @@ export default class AddProduct extends React.Component {
   }
 
   loadProducts = () => {
-    ProductService.getAllProducts()
+    ProductService.getAllProducts() // ✅ now fetches both active + inactive
       .then((res) => this.setState({ products: res.data }))
       .catch((err) => console.error(err));
   };
 
+// Handles both add and update product
   sendProdToServer = (e) => {
     e.preventDefault();
 
@@ -47,22 +48,36 @@ export default class AddProduct extends React.Component {
     const productObj = { pname, price, supplier_id, cid, stock };
 
     if (pid) {
+      // Update
       ProductService.updateProduct(pid, productObj)
         .then(() => {
-          this.setState({ msg: "", pid: "", pname: "", price: "", cid: "" });
+          this.setState({
+            msg: "",
+            pid: "",
+            pname: "",
+            price: "",
+            cid: "",
+          });
           this.loadProducts();
-          alert("Product updated successfully!");
+          alert("✅ Product updated successfully!");
         })
         .catch((err) => {
           const backendMsg = err.response?.data?.message || "Error updating product";
           this.setState({ msg: backendMsg });
         });
     } else {
+      // Add
       ProductService.saveProduct(productObj)
         .then(() => {
-          this.setState({ msg: "", pname: "", price: "", cid: "", stock: "" });
+          this.setState({
+            msg: "",
+            pname: "",
+            price: "",
+            cid: "",
+            stock: "",
+          });
           this.loadProducts();
-          alert("Product added successfully!");
+          alert("✅ Product added successfully!");
         })
         .catch((err) => {
           const backendMsg = err.response?.data?.message || "Error adding product";
@@ -80,29 +95,45 @@ export default class AddProduct extends React.Component {
     } else {
       ProductService.searchProduct(searchValue)
         .then((res) => this.setState({ products: res.data }))
-        .catch(() => this.setState({ products: [] }));
+        .catch((err) => {
+          console.error(err);
+          this.setState({ products: [] });
+        });
     }
   };
 
-  paginate = (page) => this.setState({ currentPage: page });
+  paginate = (page) => {
+    this.setState({ currentPage: page });
+  };
 
-  // Toggle product status: Activate / Deactivate
-  handleDelete = (prod) => {
-    const newStatus = prod.status === "active" ? "inactive" : "active";
-    const actionText = newStatus === "inactive" ? "deactivate" : "activate";
-
-    if (window.confirm(`Are you sure you want to ${actionText} this product?`)) {
-      ProductService.delProd(prod.pid, newStatus)
+  //Soft delete (set status=inactive instead of removing)
+  handleDelete = (pid) => {
+    if (window.confirm("Are you sure you want to deactivate this product?")) {
+      ProductService.delProd(pid) 
         .then(() => {
           this.loadProducts();
-          alert(`Product ${actionText}d successfully!`);
+          alert(" Product deleted  successfully!");
         })
-        .catch(() => alert(`Error trying to ${actionText} product`));
+        .catch(() => alert("Error deleted product"));
     }
   };
 
   render() {
-    const { pid, pname, price, cid, stock, msg, categories, products, currentPage, productsPerPage, showForm, search, userRole } = this.state;
+    const {
+      pid,
+      pname,
+      price,
+      cid,
+      stock,
+      msg,
+      categories,
+      products,
+      currentPage,
+      productsPerPage,
+      showForm,
+      search,
+      userRole,
+    } = this.state;
 
     const filteredProducts = products.filter((p) =>
       p.pname.toLowerCase().includes(search.toLowerCase())
@@ -128,7 +159,14 @@ export default class AddProduct extends React.Component {
             <button
               className="btn btn-primary ms-3"
               onClick={() =>
-                this.setState({ showForm: !showForm, pid: "", pname: "", price: "", cid: "", stock: "" })
+                this.setState({
+                  showForm: !showForm,
+                  pid: "",
+                  pname: "",
+                  price: "",
+                  cid: "",
+                  stock: "",
+                })
               }
             >
               {showForm ? "View Products" : "Add Product"}
@@ -161,6 +199,8 @@ export default class AddProduct extends React.Component {
                   required
                 />
               </div>
+
+              {/* Category dropdown */}
               <div className="form-group m-2">
                 <select
                   className="form-control"
@@ -170,10 +210,13 @@ export default class AddProduct extends React.Component {
                 >
                   <option value="">-- Select Category --</option>
                   {categories.map((cat) => (
-                    <option key={cat.cid} value={cat.cid}>{cat.cname}</option>
+                    <option key={cat.cid} value={cat.cid}>
+                      {cat.cname}
+                    </option>
                   ))}
                 </select>
               </div>
+
               <input
                 type="number"
                 value={stock}
@@ -184,8 +227,11 @@ export default class AddProduct extends React.Component {
                 disabled={!!pid}
                 title={pid ? "Stock cannot be changed while updating" : "Enter stock quantity"}
               />
+
               <div className="form-group m-2">
-                <button type="submit" className="btn btn-success w-100">{pid ? "Update Product" : "Save Product"}</button>
+                <button type="submit" className="btn btn-success w-100">
+                  {pid ? "Update Product" : "Save Product"}
+                </button>
               </div>
               {msg && <div className="alert alert-danger mt-2">{msg}</div>}
             </form>
@@ -202,13 +248,16 @@ export default class AddProduct extends React.Component {
               <th>Price</th>
               <th>Stock</th>
               <th>Category</th>
+             
               {userRole === "admin" && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
             {currentProducts.length > 0 ? (
               currentProducts.map((prod) => {
-                const categoryName = categories.find((c) => c.cid === prod.cid)?.cname || prod.cid;
+                const categoryName =
+                  categories.find((c) => c.cid === prod.cid)?.cname || prod.cid;
+
                 return (
                   <tr key={prod.pid}>
                     <td>{prod.pid}</td>
@@ -222,20 +271,27 @@ export default class AddProduct extends React.Component {
                       )}
                     </td>
                     <td>{categoryName}</td>
+                    
                     {userRole === "admin" && (
                       <td>
                         <button
                           className="btn btn-sm btn-warning me-2"
-                          onClick={() => this.setState({ showForm: true, pid: prod.pid, pname: prod.pname, price: prod.price, cid: prod.cid, stock: prod.stock })}
+                          onClick={() =>
+                            this.setState({
+                              showForm: true,
+                              pid: prod.pid,
+                              pname: prod.pname,
+                              price: prod.price,
+                              cid: prod.cid,
+                              stock: prod.stock,
+                            })
+                          }
                         >
                           Update
                         </button>
                         <button
-                          className={`btn btn-sm ${prod.status === "active" ? "btn-danger" : "btn-success"}`}
-                          onClick={() => this.handleDelete(prod)}
-                        >
-                          {prod.status === "active" ? "Deactivate" : "Activate"}
-                        </button>
+                          className="btn btn-sm btn-danger"
+                          onClick={() => this.handleDelete(prod.pid)} > DELETE</button>
                       </td>
                     )}
                   </tr>
@@ -243,7 +299,10 @@ export default class AddProduct extends React.Component {
               })
             ) : (
               <tr>
-                <td colSpan={userRole === "admin" ? "7" : "6"} className="text-danger fw-bold">
+                <td
+                  colSpan={userRole === "admin" ? "7" : "6"}
+                  className="text-danger fw-bold"
+                >
                   🚫 No products found
                 </td>
               </tr>
@@ -255,15 +314,24 @@ export default class AddProduct extends React.Component {
         <nav>
           <ul className="pagination justify-content-center">
             <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-              <button className="page-link" onClick={() => this.paginate(currentPage - 1)}>Prev</button>
+              <button className="page-link" onClick={() => this.paginate(currentPage - 1)}>
+                Prev
+              </button>
             </li>
             {Array.from({ length: totalPages }, (_, i) => (
-              <li key={i + 1} className={`page-item ${currentPage === i + 1 ? "active" : ""}`}>
-                <button className="page-link" onClick={() => this.paginate(i + 1)}>{i + 1}</button>
+              <li
+                key={i + 1}
+                className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+              >
+                <button className="page-link" onClick={() => this.paginate(i + 1)}>
+                  {i + 1}
+                </button>
               </li>
             ))}
             <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
-              <button className="page-link" onClick={() => this.paginate(currentPage + 1)}>Next</button>
+              <button className="page-link" onClick={() => this.paginate(currentPage + 1)}>
+                Next
+              </button>
             </li>
           </ul>
         </nav>

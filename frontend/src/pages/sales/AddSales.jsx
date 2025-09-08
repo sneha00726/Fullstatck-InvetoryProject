@@ -3,7 +3,7 @@ import SalesService from "../../services/salesService";
 import CustService from "../../services/customerService";
 import ProductService from "../../services/ProductSerivce";
 import "../../styles/productdash.css";
-import { Modal, Button } from "react-bootstrap"; // ⬅️ added for popup
+import { Modal, Button } from "react-bootstrap";
 
 export default function AddSales() {
   const [tab, setTab] = useState("add");
@@ -18,9 +18,7 @@ export default function AddSales() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
-  const [updateSaleId, setUpdateSaleId] = useState(null);
 
-  // ⬅️ New state for preview modal
   const [showPreview, setShowPreview] = useState(false);
 
   // Load customers, products, and sales
@@ -42,6 +40,7 @@ export default function AddSales() {
       .catch(() => setSales([]));
   };
 
+  // Handle product selection & quantity
   const handleProductChange = (index, field, value) => {
     const list = [...saleProducts];
     list[index][field] = value;
@@ -57,9 +56,7 @@ export default function AddSales() {
 
     if (field === "qty") {
       const selected = products.find(p => p.pid.toString() === list[index].product_id);
-      if (selected && value > selected.stock) {
-        list[index].qty = selected.stock;
-      }
+      if (selected && value > selected.stock) list[index].qty = selected.stock;
     }
 
     setSaleProducts(list);
@@ -77,7 +74,6 @@ export default function AddSales() {
   const calculateTotal = () =>
     saleProducts.reduce((sum, p) => sum + p.qty * parseFloat(p.product_price || 0), 0);
 
-  // ⬅️ Instead of saving directly, open preview modal
   const handleSaveClick = () => {
     if (!customer_id || saleProducts.length === 0) {
       window.alert("Select customer and at least one product");
@@ -90,11 +86,12 @@ export default function AddSales() {
     setShowPreview(true);
   };
 
-  // ⬅️ Confirm from modal -> then call actual save
   const saveSale = () => {
     const items = saleProducts.map(p => ({
       productId: parseInt(p.product_id),
       qty: parseInt(p.qty),
+      rate: p.product_price,
+      product_name: p.product_name
     }));
 
     const saleData = {
@@ -106,29 +103,23 @@ export default function AddSales() {
       gstInvoice: 1,
     };
 
-    const request = updateSaleId
-      ? SalesService.updateSale(updateSaleId, saleData)
-      : SalesService.addSale(saleData);
-
-    request
+    SalesService.addSale(saleData)
       .then(res => {
         window.alert(
-          `Sale ${updateSaleId ? "updated" : "added"} successfully!\n` +
-          `Total: ₹${(res.data.totalAmount || calculateTotal()).toFixed(2)}`
+          `Sale added successfully!\nTotal: ₹${(res.data.totalAmount || calculateTotal()).toFixed(2)}`
         );
 
         setSaleProducts([{ product_id: "", qty: 1, product_price: 0, product_name: "" }]);
         setCustomerId("");
         setInvoiceNo("");
         setPaymentMode("Cash");
-        setUpdateSaleId(null);
         loadSales();
         setTab("view");
-        setShowPreview(false); // close modal
+        setShowPreview(false);
       })
       .catch(err => {
         console.error(err.response?.data || err.message);
-        window.alert("❌ Operation failed. Please try again!");
+        window.alert("Operation failed. Please try again!");
         setShowPreview(false);
       });
   };
@@ -146,8 +137,7 @@ export default function AddSales() {
   const paginatedInvoices = filteredInvoices.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleDelete = invoiceNo => {
-    if (!window.confirm(`Delete sale with Invoice ${invoiceNo}? This will restore stock and remove all items.`))
-      return;
+    if (!window.confirm(`Delete sale with Invoice ${invoiceNo}? This will restore stock and remove all items.`)) return;
     const sale = sales.find(s => s.invoiceNo === invoiceNo);
     if (!sale) return;
 
@@ -159,39 +149,9 @@ export default function AddSales() {
       .catch(() => window.alert("Failed to delete sale"));
   };
 
-  const handleUpdate = invoiceNo => {
-    const items = groupedSales[invoiceNo];
-    if (!items || items.length === 0) return;
-
-    const sale = items[0];
-    setInvoiceNo(invoiceNo);
-    setCustomerId(sale.customer_id.toString());
-    setPaymentMode(sale.paymentMode);
-    setUpdateSaleId(sale.salesID);
-
-    const updatedProducts = items.map(item => {
-      const product = products.find(p => Number(p.pid) === Number(item.productId));
-      return {
-        product_id: item.productId?.toString() || "",
-        qty: item.qty,
-        product_price: product ? product.price : item.product_price || 0,
-        product_name: product ? product.pname : item.product_name || "",
-      };
-    });
-
-    setSaleProducts(
-      updatedProducts.length > 0
-        ? updatedProducts
-        : [{ product_id: "", qty: 1, product_price: 0, product_name: "" }]
-    );
-
-    setTab("add");
-  };
-
-  // ✅ Download Invoice
   const handleDownload = (saleId, invoiceNo) => {
     SalesService.downloadInvoice(saleId)
-      .then((res) => {
+      .then(res => {
         const url = window.URL.createObjectURL(new Blob([res.data]));
         const link = document.createElement("a");
         link.href = url;
@@ -206,45 +166,30 @@ export default function AddSales() {
   return (
     <div className="container p-4">
       <div className="mb-3">
-        <button className={`btn ${tab === "add" ? "btn-primary" : "btn-outline-primary"} me-2`} onClick={() => setTab("add")}>
-          Add Sale
-        </button>
-        <button className={`btn ${tab === "view" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setTab("view")}>
-          View Sales
-        </button>
+        <button className={`btn ${tab === "add" ? "btn-primary" : "btn-outline-primary"} me-2`} onClick={() => setTab("add")}>Add Sale</button>
+        <button className={`btn ${tab === "view" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setTab("view")}>View Sales</button>
       </div>
 
       {msg && <div className="alert alert-info">{msg}</div>}
 
-      {/* Add/Update Sale */}
+      {/* Add Sale */}
       {tab === "add" && (
         <div className="card p-4">
-          <h4>{updateSaleId ? "Update Sale" : "Add Sale"}</h4>
+          <h4>Add Sale</h4>
 
           <div className="mb-3">
             <label>Customer</label>
             <select className="form-control" value={customer_id} onChange={e => setCustomerId(e.target.value)}>
               <option value="">Select Customer</option>
-              {customers.map(c => (
-                <option key={c.id} value={c.id.toString()}>
-                  {c.name}
-                </option>
-              ))}
+              {customers.map(c => <option key={c.id} value={c.id.toString()}>{c.name}</option>)}
             </select>
           </div>
 
           <div className="mb-3">
             <label>Invoice No</label>
-            <input
-              type="text"
-              className="form-control"
-              value={invoiceNo}
-              onChange={e => setInvoiceNo(e.target.value)}
-              placeholder="Enter invoice number"
-            />
+            <input type="text" className="form-control" value={invoiceNo} onChange={e => setInvoiceNo(e.target.value)} placeholder="Enter invoice number" />
           </div>
 
-          {/* Payment Mode */}
           <div className="mb-3">
             <label>Payment Mode</label>
             <select className="form-control" value={paymentMode} onChange={e => setPaymentMode(e.target.value)}>
@@ -259,11 +204,7 @@ export default function AddSales() {
           {saleProducts.map((item, index) => (
             <div className="row mb-2" key={index}>
               <div className="col">
-                <select
-                  className="form-control"
-                  value={item.product_id}
-                  onChange={e => handleProductChange(index, "product_id", e.target.value)}
-                >
+                <select className="form-control" value={item.product_id} onChange={e => handleProductChange(index, "product_id", e.target.value)}>
                   <option value="">Select Product</option>
                   {products.map(p => (
                     <option key={p.pid} value={p.pid.toString()} disabled={p.stock <= 0 && p.pid.toString() !== item.product_id}>
@@ -272,52 +213,27 @@ export default function AddSales() {
                   ))}
                 </select>
               </div>
-
               <div className="col">
-                <input
-                  type="number"
-                  min="1"
-                  className="form-control"
-                  value={item.qty}
-                  onChange={e => handleProductChange(index, "qty", parseInt(e.target.value))}
-                  max={products.find(p => p.pid.toString() === item.product_id)?.stock || 1}
-                />
+                <input type="number" min="1" className="form-control" value={item.qty} onChange={e => handleProductChange(index, "qty", parseInt(e.target.value))} max={products.find(p => p.pid.toString() === item.product_id)?.stock || 1} />
               </div>
-
               <div className="col">
                 <input type="text" className="form-control" value={item.product_price} readOnly />
               </div>
-
               <div className="col-auto">
-                {saleProducts.length > 1 && (
-                  <button className="btn btn-danger" onClick={() => removeProductRow(index)}>
-                    Remove
-                  </button>
-                )}
+                {saleProducts.length > 1 && <button className="btn btn-danger" onClick={() => removeProductRow(index)}>Remove</button>}
               </div>
             </div>
           ))}
 
-          <button className="btn btn-secondary mb-3" onClick={addProductRow}>
-            Add Product
-          </button>
-
-          <div className="mb-3">
-            <strong>Total Amount: ₹{calculateTotal().toFixed(2)}</strong>
-          </div>
-
-          {/* ⬅️ Now opens Preview instead of direct save */}
-          <button className="btn btn-success w-100" onClick={handleSaveClick}>
-            {updateSaleId ? "Update Sale" : "Save Sale"}
-          </button>
+          <button className="btn btn-secondary mb-3" onClick={addProductRow}>Add Product</button>
+          <div className="mb-3"><strong>Total Amount: ₹{calculateTotal().toFixed(2)}</strong></div>
+          <button className="btn btn-success w-100" onClick={handleSaveClick}>Save Sale</button>
         </div>
       )}
 
       {/* Bill Preview Modal */}
       <Modal show={showPreview} onHide={() => setShowPreview(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Bill Preview</Modal.Title>
-        </Modal.Header>
+        <Modal.Header closeButton><Modal.Title>Bill Preview</Modal.Title></Modal.Header>
         <Modal.Body>
           <h5>Customer: {customers.find(c => c.id.toString() === customer_id)?.name || "N/A"}</h5>
           <h6>Invoice No: {invoiceNo}</h6>
@@ -356,18 +272,11 @@ export default function AddSales() {
         </Modal.Footer>
       </Modal>
 
-      {/* View Sales (unchanged) */}
+      {/* View Sales */}
       {tab === "view" && (
         <div>
-          {/* ... your existing view sales table & pagination code ... */}
           <div className="mb-3">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search Invoice No"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
+            <input type="text" className="form-control" placeholder="Search Invoice No" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
           </div>
 
           {paginatedInvoices.length === 0 ? (
@@ -384,16 +293,8 @@ export default function AddSales() {
                       {new Date(salesDate).toLocaleDateString()} | Payment: {paymentMode} | Total: ₹{totalAmount}
                     </div>
                     <div>
-                      <button className="btn btn-sm btn-warning me-2 d-none"  onClick={() => handleUpdate(inv)}>
-                        Update
-                      </button>
-                      <button className="btn btn-sm btn-danger me-2" onClick={() => handleDelete(inv)}>
-                        Delete
-                      </button>
-                      {/*  Download Invoice Button */}
-                      <button className="btn btn-sm btn-info" onClick={() => handleDownload(salesID, inv)}>
-                        Download
-                      </button>
+                      <button className="btn btn-sm btn-danger me-2" onClick={() => handleDelete(inv)}>Delete</button>
+                      <button className="btn btn-sm btn-info" onClick={() => handleDownload(salesID, inv)}>Download</button>
                     </div>
                   </div>
                   <div className="card-body p-0">
@@ -427,18 +328,9 @@ export default function AddSales() {
 
           {/* Pagination */}
           <div className="d-flex justify-content-end mb-3">
-            <button className="btn btn-sm btn-secondary me-2" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
-              Prev
-            </button>
-            <button
-              className="btn btn-sm btn-secondary"
-              disabled={currentPage * pageSize >= filteredInvoices.length}
-              onClick={() => setCurrentPage(currentPage + 1)}
-            >
-              Next
-            </button>
+            <button className="btn btn-sm btn-secondary me-2" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>Prev</button>
+            <button className="btn btn-sm btn-secondary" disabled={currentPage * pageSize >= filteredInvoices.length} onClick={() => setCurrentPage(currentPage + 1)}>Next</button>
           </div>
-
         </div>
       )}
     </div>

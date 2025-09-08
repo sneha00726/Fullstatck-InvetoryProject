@@ -46,7 +46,7 @@ export default class CategoryManager extends React.Component {
       // Update existing category
       CategoryService.updateCategory(editId, payload)
         .then((res) => {
-          window.alert("✅ Category updated successfully!");
+          window.alert(" Category updated successfully!");
           this.setState({
             msg: res.data.message,
             name: "",
@@ -56,49 +56,39 @@ export default class CategoryManager extends React.Component {
           this.loadCategories();
         })
         .catch(() => {
-          window.alert("❌ Update failed");
+          window.alert(" Update failed");
           this.setState({ msg: "Update failed" });
         });
     } else {
       // Add new category
       CategoryService.saveCategory(payload)
         .then((res) => {
-          window.alert("✅ Category added successfully!");
+          window.alert(" Category added successfully!");
           this.setState({ msg: res.data.message, name: "", showForm: false });
           this.loadCategories();
         })
         .catch((err) => {
           if (err.response && err.response.status === 409) {
-            window.alert("⚠️ Category name already exists!");
+            window.alert(" Category name already exists!");
             this.setState({ msg: "Category name already exists!" });
           } else {
-            window.alert("❌ Add failed");
+            window.alert(" Add failed");
             this.setState({ msg: "Add failed" });
           }
         });
     }
   };
 
-  // Deactivate a category (soft delete)
+  // Delete a category
   handleDelete = (catId) => {
-    if (window.confirm("Are you sure you want to deactivate this category?")) {
+    if (window.confirm("Are you sure you want to delete this category?")) {
       CategoryService.delCat(catId)
         .then(() => {
-          this.setState({ msg: "Category deactivated successfully" });
+          this.setState({ msg: "Category deleted successfully" });
           this.loadCategories();
         })
-        .catch(() => this.setState({ msg: "Deactivation failed" }));
+        .catch(() => this.setState({ msg: "Delete failed" }));
     }
-  };
-
-  // Reactivate a category
-  handleReactivate = (catId) => {
-    CategoryService.activateCategory(catId)
-      .then(() => {
-        this.setState({ msg: "Category activated successfully" });
-        this.loadCategories();
-      })
-      .catch(() => this.setState({ msg: "Activation failed" }));
   };
 
   // Edit category (prefill form)
@@ -182,12 +172,9 @@ export default class CategoryManager extends React.Component {
                 onChange={(e) => this.setState({ name: e.target.value })}
               />
             </div>
-            {msg && <div className="alert alert-danger mt-2">{msg}</div>}
             <div className="form-group m-2">
               <button
-                className={`btn w-100 ${
-                  editId ? "btn-warning" : "btn-success"
-                }`}
+                className={`btn w-100 ${editId ? "btn-warning" : "btn-success"}`}
                 onClick={this.handleAddOrUpdate}
               >
                 {editId ? "Update" : "Add"}
@@ -203,7 +190,6 @@ export default class CategoryManager extends React.Component {
             <tr>
               <th>Category ID</th>
               <th>Name</th>
-              <th>Status</th>
               {userRole === "admin" && <th>Actions</th>}
             </tr>
           </thead>
@@ -213,17 +199,6 @@ export default class CategoryManager extends React.Component {
                 <tr key={cat.cid}>
                   <td>{cat.cid}</td>
                   <td>{cat.cname}</td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        cat.status === "active"
-                          ? "bg-success"
-                          : "bg-secondary"
-                      }`}
-                    >
-                      {cat.status}
-                    </span>
-                  </td>
                   {userRole === "admin" && (
                     <td>
                       <button
@@ -232,22 +207,12 @@ export default class CategoryManager extends React.Component {
                       >
                         Edit
                       </button>
-
-                      {cat.status === "active" ? (
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => this.handleDelete(cat.cid)}
-                        >
-                          Deactivate
-                        </button>
-                      ) : (
-                        <button
-                          className="btn btn-sm btn-success"
-                          onClick={() => this.handleReactivate(cat.cid)}
-                        >
-                          Activate
-                        </button>
-                      )}
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => this.handleDelete(cat.cid)}
+                      >
+                        Delete
+                      </button>
                     </td>
                   )}
                 </tr>
@@ -255,10 +220,10 @@ export default class CategoryManager extends React.Component {
             ) : (
               <tr>
                 <td
-                  colSpan={userRole === "admin" ? "4" : "3"}
+                  colSpan={userRole === "admin" ? "3" : "2"}
                   className="text-danger fw-bold"
                 >
-                  No categories found
+                   No categories found
                 </td>
               </tr>
             )}
