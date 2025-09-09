@@ -1,12 +1,4 @@
 let db = require("../../db.js");
-<<<<<<< HEAD
-
-let db = require("../../db.js");
-=======
-/*
-Add Purchase
-*/
->>>>>>> b7e124a7d485976a150f6bef379c40f75a591d4e
 
 // Add a new purchase
 exports.addPurchase = ({ invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items }) => {
@@ -64,16 +56,15 @@ exports.addPurchase = ({ invoiceno, purchasedate, supplierid, paymentmode, gstin
 // View all purchases
 exports.viewPurchases = () => {
   return new Promise((resolve, reject) => {
-    const sql = `
-      SELECT p.id AS purchaseid, p.invoiceno, p.purchasedate, p.supplierid,
-             s.name AS suppliername, p.totalamount, p.paymentmode, p.gstinvoice,
-             pi.id AS itemid, pi.productid, pr.pname AS productname, pi.quantity, pi.price
-      FROM purchase p
-      JOIN supplier s ON p.supplierid = s.sid
-      JOIN purchase_items pi ON p.id = pi.purchaseid
-      JOIN product pr ON pi.productid = pr.pid
-      ORDER BY p.id DESC
-    `;
+    const sql = `SELECT p.id AS purchaseid, p.invoiceno, p.purchasedate, p.supplierid,
+         s.name AS suppliername, p.totalamount, p.paymentmode, p.gstinvoice,
+         pi.id AS itemid, pi.productid, pr.pname AS productname, pi.quantity, pi.price
+         FROM purchase p
+         JOIN supplier s ON p.supplierid = s.sid
+         LEFT JOIN purchase_items pi ON p.id = pi.purchaseid
+         LEFT JOIN product pr ON pi.productid = pr.pid
+         ORDER BY p.id DESC
+        `;
     db.query(sql, (err, result) => {
       if (err) return reject(err);
       resolve(result);
@@ -205,31 +196,7 @@ exports.deletePurchaseById = (id) => {
   });
 };
 
-
-/**
- * Delete Purchase
- 
-exports.deletePurchaseById = (id) => {
-  return new Promise((resolve, reject) => {
-    db.query(`DELETE FROM purchase_items WHERE  purchaseid=?`, [id], (err) => {
-      if (err) return reject(err);
-
-      db.query(`DELETE FROM purchase WHERE  id=?`, [id], (err2, result) => {
-        if (err2) return reject(err2);
-
-        if (result.affectedRows === 0) {
-          return reject(new Error("No sale found with this ID"));
-        }
-
-        resolve({ message: "purchase deleted", affectedRows: result.affectedRows });
-      });
-    });
-  });
-};
-*/
-/**
- * Search Purchase
- */
+// Search purchase
 exports.searchPurchase = (searchTerm) => {
   return new Promise((resolve, reject) => {
     const likeTerm = `%${searchTerm}%`;
