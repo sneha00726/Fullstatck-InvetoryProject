@@ -103,8 +103,8 @@ export default class AddSupplier extends React.Component {
     action
       .then((res) => {
         const msg = sid
-          ? ["✅ Supplier updated successfully"]
-          : [res.data.message || "✅ Supplier added successfully"];
+          ? [" Supplier updated successfully"]
+          : [res.data.message || " Supplier added successfully"];
 
         this.setState({
           msg,
@@ -127,7 +127,7 @@ export default class AddSupplier extends React.Component {
         } else {
           const serverData = err.response?.data;
           this.setState({
-            msg: serverData?.errors || [serverData?.message || "❌ Action failed"],
+            msg: serverData?.errors || [serverData?.message || " Action failed"],
           });
         }
       });

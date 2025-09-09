@@ -1,3 +1,4 @@
+
 const smodel = require("../models/suppliermodel.js");
 const { validateSupplier } = require("../validation/suppliervalidation.js");
 

@@ -22,7 +22,7 @@ exports.CreateCategoryAdd = (name) => {
 // Get all categories
 exports.getViewCategory = () => {
     return new Promise((resolve, reject) => {
-        db.query("SELECT * FROM category ORDER BY cid DESC", (err, result) => {
+        db.query("SELECT * FROM category ", (err, result) => {
             if (err) reject(err);
             else resolve(result);
         });
@@ -47,7 +47,7 @@ exports.CategoryUpdate = (id, name) => {
     });
 };
 
-// Delete category + its products
+// 
 exports.CategoryDelete = (id) => {
   return new Promise((resolve, reject) => {
     db.query("DELETE FROM category WHERE cid=?", [id], (err, result) => {

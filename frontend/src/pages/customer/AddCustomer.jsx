@@ -224,7 +224,7 @@ sendCustomerToServer = () => {
         <table className="table table-hover table-striped align-middle text-center">
           <thead className="table-dark">
             <tr>
-              <th>ID</th>
+              <th>SRNO</th>
               <th>Name</th>
               <th>Email</th>
               <th>Phone</th>
@@ -235,9 +235,9 @@ sendCustomerToServer = () => {
             </tr>
           </thead>
           <tbody>
-            {currentCustomers.length > 0 ? currentCustomers.map((cust) => (
+            {currentCustomers.length > 0 ? currentCustomers.map((cust,index) => (
               <tr key={cust.id}>
-                <td>{cust.id}</td>
+                <td>{index+1}</td>
                 <td>{cust.name}</td>
                 <td>{cust.email}</td>
                 <td>{cust.phone_no}</td>

@@ -11,21 +11,28 @@ export default class SignUp extends React.Component {
       password: "",
       role: "",
       message: "",
+      error: "",   //  added error state
     };
   }
 
-  handleSubmit = async (e) => {
+  handleSubmit = (e) => {
     e.preventDefault();
     const { name, email, password, role } = this.state;
 
-    try {
-      const res = await registerUser({ name, email, password, role });
-      this.setState({ message: res.message });
-      // Redirect to login after registration
-      window.location.href = "/login";
-    } catch (err) {
-      this.setState({ message: err.message || "Something went wrong" });
-    }
+    registerUser({ name, email, password, role })
+      .then((res) => {
+        this.setState({ message: res.message, error: "" });
+        // Redirect to login after registration
+        window.location.href = "/login";
+      })
+      .catch((err) => {
+        const backendMessage =
+          err.response?.data?.message || // validation / duplicate email
+          err.message ||                 
+          "Something went wrong";
+
+        this.setState({ error: backendMessage, message: "" });
+      });
   };
 
   goHome = () => {
@@ -33,7 +40,7 @@ export default class SignUp extends React.Component {
   };
 
   render() {
-    const { name, email, password, role, message } = this.state;
+    const { name, email, password, role, message, error } = this.state;
 
     return (
       <div className="container mt-5">
@@ -47,47 +54,20 @@ export default class SignUp extends React.Component {
                 <form onSubmit={this.handleSubmit}>
                   <div className="mb-3">
                     <label className="form-label">Name:</label>
-                    <input
-                      type="text"
-                      value={name}
-                      placeholder="Enter your name"
-                      className="form-control"
-                      onChange={(e) => this.setState({ name: e.target.value })}
-                      required
-                    />
+                    <input   type="text"  value={name}   placeholder="Enter your name"  className="form-control"  onChange={(e) => this.setState({ name: e.target.value })} />
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Email:</label>
-                    <input
-                      type="email"
-                      value={email}
-                      placeholder="Enter your email"
-                      className="form-control"
-                      onChange={(e) => this.setState({ email: e.target.value })}
-                      required
-                    />
+                    <input type="text"  value={email}   placeholder="Enter your email"   className="form-control"   onChange={(e) => this.setState({ email: e.target.value })}
+                       />
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Password:</label>
-                    <input
-                      type="password"
-                      value={password}
-                      placeholder="Enter your password"
-                      className="form-control"
-                      onChange={(e) =>
-                        this.setState({ password: e.target.value })
-                      }
-                      required
-                    />
+                    <input   type="password"   value={password}   placeholder="Enter your password"   className="form-control"  onChange={(e) =>  this.setState({ password: e.target.value })  }          />
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Role:</label>
-                    <select
-                      className="form-select"
-                      value={role}
-                      onChange={(e) => this.setState({ role: e.target.value })}
-                      required
-                    >
+                    <select  className="form-select"  value={role}  onChange={(e) => this.setState({ role: e.target.value })}   >
                       <option value="">Select role</option>
                       <option value="user">User</option>
                       <option value="admin">Admin</option>
@@ -104,8 +84,13 @@ export default class SignUp extends React.Component {
                     Go to Home
                   </button>
                 </div>
+
+                {/*  show error or success */}
+                {error && (
+                  <p className="text-danger mt-3 text-center">{error}</p>
+                )}
                 {message && (
-                  <p className="text-danger mt-3 text-center">{message}</p>
+                  <p className="text-success mt-3 text-center">{message}</p>
                 )}
               </div>
               <div className="card-footer text-center">

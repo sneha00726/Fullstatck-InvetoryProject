@@ -7,7 +7,7 @@ import "../../styles/productdash.css";
 export default class AddProduct extends React.Component {
   constructor() {
     super();
-    const user = getCurrentUser();
+    const user = getCurrentUser();   //fetch the current login user 
     this.state = {
       pid: "",
       pname: "",
@@ -22,7 +22,7 @@ export default class AddProduct extends React.Component {
       productsPerPage: 10,
       showForm: false,
       search: "",
-      userRole: user?.role || "user",
+      userRole: user?.role || "user",   //and if user is not found then by default user fetch role (admin/user)
     };
   }
 
@@ -35,7 +35,7 @@ export default class AddProduct extends React.Component {
   }
 
   loadProducts = () => {
-    ProductService.getAllProducts() // ✅ now fetches both active + inactive
+    ProductService.getAllProducts() 
       .then((res) => this.setState({ products: res.data }))
       .catch((err) => console.error(err));
   };
@@ -59,7 +59,7 @@ export default class AddProduct extends React.Component {
             cid: "",
           });
           this.loadProducts();
-          alert("✅ Product updated successfully!");
+          alert(" Product updated successfully!");
         })
         .catch((err) => {
           const backendMsg = err.response?.data?.message || "Error updating product";
@@ -77,7 +77,7 @@ export default class AddProduct extends React.Component {
             stock: "",
           });
           this.loadProducts();
-          alert("✅ Product added successfully!");
+          alert(" Product added successfully!");
         })
         .catch((err) => {
           const backendMsg = err.response?.data?.message || "Error adding product";
@@ -106,7 +106,7 @@ export default class AddProduct extends React.Component {
     this.setState({ currentPage: page });
   };
 
-  //Soft delete (set status=inactive instead of removing)
+  
   handleDelete = (pid) => {
     if (window.confirm("Are you sure you want to deactivate this product?")) {
       ProductService.delProd(pid) 
@@ -148,27 +148,10 @@ export default class AddProduct extends React.Component {
       <div className="container p-4">
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <input
-            type="text"
-            className="form-control w-50"
-            placeholder="Search product..."
-            value={search}
-            onChange={this.handleSearch}
-          />
+          <input type="text"  className="form-control w-50"  placeholder="Search product..."  value={search} onChange={this.handleSearch} />
           {userRole === "admin" && (
-            <button
-              className="btn btn-primary ms-3"
-              onClick={() =>
-                this.setState({
-                  showForm: !showForm,
-                  pid: "",
-                  pname: "",
-                  price: "",
-                  cid: "",
-                  stock: "",
-                })
-              }
-            >
+            <button className="btn btn-primary ms-3"  onClick={() =>  this.setState({   showForm: !showForm, pid: "",   pname: "",  price: "", cid: "", stock: "",
+                }) } >
               {showForm ? "View Products" : "Add Product"}
             </button>
           )}
@@ -180,34 +163,17 @@ export default class AddProduct extends React.Component {
             <h4>{pid ? "Update Product" : "Add Product"}</h4>
             <form onSubmit={this.sendProdToServer}>
               <div className="form-group m-2">
-                <input
-                  type="text"
-                  value={pname}
-                  placeholder="Enter product name"
-                  className="form-control"
-                  onChange={(e) => this.setState({ pname: e.target.value })}
-                  required
+                <input type="text" value={pname} placeholder="Enter product name" className="form-control" onChange={(e) => this.setState({ pname: e.target.value })} required
                 />
               </div>
               <div className="form-group m-2">
-                <input
-                  type="number"
-                  value={price}
-                  placeholder="Enter product price"
-                  className="form-control"
-                  onChange={(e) => this.setState({ price: e.target.value })}
-                  required
+                <input type="number" value={price}  placeholder="Enter product price"  className="form-control"  onChange={(e) => this.setState({ price: e.target.value })} required
                 />
               </div>
 
               {/* Category dropdown */}
               <div className="form-group m-2">
-                <select
-                  className="form-control"
-                  value={cid}
-                  onChange={(e) => this.setState({ cid: e.target.value })}
-                  required
-                >
+                <select className="form-control"  value={cid}  onChange={(e) => this.setState({ cid: e.target.value })}  >
                   <option value="">-- Select Category --</option>
                   {categories.map((cat) => (
                     <option key={cat.cid} value={cat.cid}>
@@ -217,16 +183,8 @@ export default class AddProduct extends React.Component {
                 </select>
               </div>
 
-              <input
-                type="number"
-                value={stock}
-                placeholder="Enter stock"
-                className="form-control"
-                onChange={(e) => this.setState({ stock: e.target.value })}
-                required
-                disabled={!!pid}
-                title={pid ? "Stock cannot be changed while updating" : "Enter stock quantity"}
-              />
+              <input   type="number"  value={stock}  placeholder="Enter stock"  className="form-control"    onChange={(e) => this.setState({ stock: e.target.value })}   required
+                disabled={!!pid} title={pid ? "Stock cannot be changed while updating" : "Enter stock quantity"}  />
 
               <div className="form-group m-2">
                 <button type="submit" className="btn btn-success w-100">
@@ -243,7 +201,7 @@ export default class AddProduct extends React.Component {
         <table className="table table-hover table-striped align-middle text-center">
           <thead className="table-dark">
             <tr>
-              <th>PID</th>
+              <th>SRNO</th>
               <th>Name</th>
               <th>Price</th>
               <th>Stock</th>
@@ -254,13 +212,13 @@ export default class AddProduct extends React.Component {
           </thead>
           <tbody>
             {currentProducts.length > 0 ? (
-              currentProducts.map((prod) => {
+              currentProducts.map((prod,index) => {
                 const categoryName =
                   categories.find((c) => c.cid === prod.cid)?.cname || prod.cid;
 
                 return (
                   <tr key={prod.pid}>
-                    <td>{prod.pid}</td>
+                    <td>{index+1}</td>
                     <td>{prod.pname}</td>
                     <td>₹{prod.price}</td>
                     <td>
@@ -274,20 +232,8 @@ export default class AddProduct extends React.Component {
                     
                     {userRole === "admin" && (
                       <td>
-                        <button
-                          className="btn btn-sm btn-warning me-2"
-                          onClick={() =>
-                            this.setState({
-                              showForm: true,
-                              pid: prod.pid,
-                              pname: prod.pname,
-                              price: prod.price,
-                              cid: prod.cid,
-                              stock: prod.stock,
-                            })
-                          }
-                        >
-                          Update
+                        <button className="btn btn-sm btn-warning me-2" onClick={() => this.setState({
+                              showForm: true, pid: prod.pid,  pname: prod.pname,  price: prod.price, cid: prod.cid,  stock: prod.stock,  }) } >   Update
                         </button>
                         <button
                           className="btn btn-sm btn-danger"
@@ -299,11 +245,8 @@ export default class AddProduct extends React.Component {
               })
             ) : (
               <tr>
-                <td
-                  colSpan={userRole === "admin" ? "7" : "6"}
-                  className="text-danger fw-bold"
-                >
-                  🚫 No products found
+                <td colSpan={userRole === "admin" ? "7" : "6"} className="text-danger fw-bold">
+               No products found
                 </td>
               </tr>
             )}

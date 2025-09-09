@@ -40,15 +40,7 @@ exports.viewUsers = () => {
   });
 };
 
-// Get user by ID
-exports.getUserById = (id) => {
-  return new Promise((resolve, reject) => {
-    db.query(`SELECT id, name, email, role FROM user WHERE id=?`, [id], (err, result) => {
-      if (err) return reject(err);
-      resolve(result[0]); // return single object
-    });
-  });
-};
+
 
 // Update user
 exports.updateUser = (id, name, email, role) => {

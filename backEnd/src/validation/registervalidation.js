@@ -1,8 +1,10 @@
 
 exports.validateEmail = function(email) {
-    // Simple regex for email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    if (!email || typeof email !== 'string' || email.trim() === '') {
+        errors.push("Email is required.");
+    } else if (!email.includes('@') || !email.includes('.') || email.startsWith('@') || email.endsWith('@') || email.endsWith('.')) {
+        errors.push("Email format is invalid.");
+    }
 }
 
 //At least 6 characters

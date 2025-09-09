@@ -1,3 +1,4 @@
+
 // supplierservice.jsx
 import axios from "axios";
 
@@ -28,7 +29,7 @@ class SupplierService {
     return axios.put(`${API_URL}/update/${id}`, data, this.getConfig());
   }
 
-  // 👇 Fix naming: must be delSupplier to match your component
+  // Fix naming: must be delSupplier to match your component
   delSupplier(id) {
     return axios.delete(`${API_URL}/delete/${id}`, this.getConfig());
   }

@@ -1,35 +1,46 @@
 import axios from "axios";
+//axios means HTTp client.on API psot /get use for perform 
+const API_URL = "http://localhost:3000/api";//base url 
 
-const API_URL = "http://localhost:3000/api";
-
-// Register new user
-export const registerUser = async (userData) => {
-  try {
-    const res = await axios.post(`${API_URL}/register`, userData);
-    return res.data;
-  } catch (err) {
-    throw err.response?.data || err;
-  }
+// Register new user (Promise style)
+export const registerUser = (userData) => {
+  return axios
+    .post(`${API_URL}/register`, userData)
+    .then((res) => res.data)
+    .catch((err) => {
+     
+      throw (err.response && err.response.data) ? err.response.data : err;
+    });
 };
 
-export const loginUser = async (credentials) => {
-  try {
-    const res = await axios.post(`${API_URL}/login`, credentials);
-    // save token to localStorage
-    if (res.data.token) localStorage.setItem("token", res.data.token);
-    return res.data;
-  } catch (err) {
-    throw err.response?.data || err;
-  }
+// Login user
+export const loginUser = (credentials) => {
+  return axios
+    .post(`${API_URL}/login`, credentials)
+    .then((res) => {
+      // Save token if backend returned one
+      if (res.data && res.data.token) {
+        localStorage.setItem("token", res.data.token);
+      }
+      return res.data;
+    })
+    .catch((err) => {
+      throw (err.response && err.response.data) ? err.response.data : err;
+    });
 };
 
 // Get current user info from token
 export const getCurrentUser = () => {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
-  // Decode token payload (simple base64 decode)
-  const payload = JSON.parse(atob(token.split(".")[1]));
-  return payload; // { id, role }
+  const token = localStorage.getItem("token");  //fetch token
+  if (!token) return null;   //if not found return null
+  try {
+    // JWT payload is the middle part (base64)
+    const payload = JSON.parse(atob(token.split(".")[1]));   
+    return payload; // typically { id, role, iat, exp, ... }
+  } catch (e) {
+    // invalid token format
+    return null;
+  }
 };
 
 // Logout user

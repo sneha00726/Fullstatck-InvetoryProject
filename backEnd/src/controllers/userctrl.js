@@ -1,5 +1,5 @@
 const userModel = require("../models/usermodel.js");
-
+let {validateUser}=require("../validation/UserValidation.js");
 // Add user
 exports.addUser = (req, res) => {
   const { name, email, role, password } = req.body;
@@ -7,7 +7,10 @@ exports.addUser = (req, res) => {
   if (!name || !email || !role || !password) {
     return res.status(400).json({ success: false, message: "All fields are required" });
   }
-
+  const errors = validateUser(name, email, password);
+      if (errors.length > 0) {
+          return res.status(400).json({ message: "Validation failed", errors });
+      }
   userModel.createUser(name, email, role, password)
     .then(result => {
       res.status(201).json({ success: true, message: "User created successfully", result });
@@ -28,20 +31,7 @@ exports.viewUsers = (req, res) => {
   });
 };
 
-// Get user by ID
-exports.getUserById = (req, res) => {
-  const id = req.params.id;
-  const promise = userModel.getUserById(id);
 
-  promise.then(user => {
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-    res.status(200).json({ success: true, user });
-  }).catch(err => {
-    res.status(500).json({ success: false, message: "Unable to fetch user", error: err.message });
-  });
-};
 
 // Update user
 exports.updateUser = (req, res) => {

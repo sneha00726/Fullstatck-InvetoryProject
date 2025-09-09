@@ -2,7 +2,7 @@ import React from "react";
 import { Link, Outlet } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "../../services/login.register";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { FaBox, FaList, FaUser, FaTruck, FaShoppingCart, FaUsers, FaMoneyBill, FaSignOutAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaBox, FaList, FaUser, FaTruck, FaShoppingCart ,FaUsers, FaMoneyBill, FaSignOutAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "../../styles/dashboard.css";
 
 export default class DashBoard extends React.Component {
@@ -31,6 +31,7 @@ export default class DashBoard extends React.Component {
 
     // Menu items with icons
     const menuItems = [
+    
       { name: "Products", icon: <FaBox />, path: "addproduct" },
       { name: "Category", icon: <FaList />, path: "addcategory" },
       { name: "Customer", icon: <FaUser />, path: "addcustomer" },
@@ -38,9 +39,11 @@ export default class DashBoard extends React.Component {
 
     if (userRole === "admin") {
       menuItems.push(
+        
         { name: "Suppliers", icon: <FaTruck />, path: "addsupplier" },
         { name: "Purchases", icon: <FaMoneyBill />, path: "purchases" },
-        { name: "Manage Users", icon: <FaUsers />, path: "user" }
+        { name: "Manage Users", icon: <FaUsers />, path: "user" },
+       
       );
     }
 

@@ -36,11 +36,11 @@ export default class CategoryManager extends React.Component {
     const { name, editId } = this.state;
 
     if (!name.trim()) {
-      window.alert("❌ Category name is required");
+      window.alert(" Category name is required");
       return;
     }
 
-    const payload = { cname: name };
+    const payload = { cname: name };//create a object t osend in bacckend 
 
     if (editId) {
       // Update existing category
@@ -140,19 +140,9 @@ export default class CategoryManager extends React.Component {
       <div className="container p-4">
         {/* Search + Add */}
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <input
-            type="text"
-            className="form-control w-50"
-            placeholder="Search category..."
-            value={search}
-            onChange={this.handleSearch}
-          />
+          <input type="text"  className="form-control w-50"  placeholder="Search category..."  value={search}   onChange={this.handleSearch}  />
           {userRole === "admin" && (
-            <button
-              className="btn btn-primary ms-3"
-              onClick={() =>
-                this.setState({ showForm: !showForm, name: "", editId: null })
-              }
+            <button className="btn btn-primary ms-3" onClick={() => this.setState({ showForm: !showForm, name: "", editId: null })}
             >
               {showForm ? "View Categories" : "Add Category"}
             </button>
@@ -164,13 +154,7 @@ export default class CategoryManager extends React.Component {
           <div className="card p-4 mb-4">
             <h4>{editId ? "Update Category" : "Add Category"}</h4>
             <div className="form-group m-2">
-              <input
-                type="text"
-                value={name}
-                placeholder="Enter category name"
-                className="form-control"
-                onChange={(e) => this.setState({ name: e.target.value })}
-              />
+              <input type="text" value={name}  placeholder="Enter category name"  className="form-control"  onChange={(e) => this.setState({ name: e.target.value })} />
             </div>
             <div className="form-group m-2">
               <button
@@ -188,43 +172,30 @@ export default class CategoryManager extends React.Component {
         <table className="table table-hover table-striped align-middle text-center">
           <thead className="table-dark">
             <tr>
-              <th>Category ID</th>
+              <th>SRNO</th>
               <th>Name</th>
               {userRole === "admin" && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
-            {currentCategories.length > 0 ? (
-              currentCategories.map((cat) => (
+            {currentCategories.length > 0 ? ( currentCategories.map((cat,index) => (
                 <tr key={cat.cid}>
-                  <td>{cat.cid}</td>
+                  <td>{index+1}</td>
                   <td>{cat.cname}</td>
                   {userRole === "admin" && (
                     <td>
-                      <button
-                        className="btn btn-sm btn-warning me-2"
-                        onClick={() => this.handleEdit(cat)}
+                      <button className="btn btn-sm btn-warning me-2" onClick={() => this.handleEdit(cat)}
                       >
                         Edit
                       </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => this.handleDelete(cat.cid)}
-                      >
-                        Delete
-                      </button>
+                      <button className="btn btn-sm btn-danger" onClick={() => this.handleDelete(cat.cid)} >  Delete </button>
                     </td>
                   )}
                 </tr>
               ))
             ) : (
               <tr>
-                <td
-                  colSpan={userRole === "admin" ? "3" : "2"}
-                  className="text-danger fw-bold"
-                >
-                   No categories found
-                </td>
+                <td colSpan={userRole === "admin" ? "3" : "2"}className="text-danger fw-bold" >  No categories found   </td>
               </tr>
             )}
           </tbody>
@@ -234,42 +205,15 @@ export default class CategoryManager extends React.Component {
         {totalPages > 1 && (
           <nav>
             <ul className="pagination justify-content-center">
-              <li
-                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
-              >
-                <button
-                  className="page-link"
-                  onClick={() => this.paginate(currentPage - 1)}
-                >
-                  Prev
+              <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`} >  <button className="page-link"onClick={() => this.paginate(currentPage - 1)} > Prev
                 </button>
               </li>
               {Array.from({ length: totalPages }, (_, i) => (
-                <li
-                  key={i + 1}
-                  className={`page-item ${
-                    currentPage === i + 1 ? "active" : ""
-                  }`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => this.paginate(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                </li>
+                <li key={i + 1} className={`page-item ${   currentPage === i + 1 ? "active" : "" }`} >
+                  <button className="page-link"   onClick={() => this.paginate(i + 1)}  >   {i + 1}  </button>  </li>
               ))}
-              <li
-                className={`page-item ${
-                  currentPage === totalPages ? "disabled" : ""
-                }`}
-              >
-                <button
-                  className="page-link"
-                  onClick={() => this.paginate(currentPage + 1)}
-                >
-                  Next
-                </button>
+              <li className={`page-item ${ currentPage === totalPages ? "disabled" : ""}`} >
+                <button className="page-link"onClick={() => this.paginate(currentPage + 1)}  >  Next  </button>
               </li>
             </ul>
           </nav>

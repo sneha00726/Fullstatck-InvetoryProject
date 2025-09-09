@@ -86,57 +86,68 @@ exports.salesSearch = (req, res) => {
 
 
 
+
 exports.downloadInvoice = (req, res) => {
-  const { id } = req.params; // saleId
+  const { id } = req.params;
 
-  salesModel.getInvoiceData(id, (err, rows) => {
-    if (err || rows.length === 0) {
-      return res.status(500).send("Invoice not found");
-    }
+  salesModel
+    .getInvoiceData(id) // this returns a Promise
+    .then((rows) => {
+      if (!rows || rows.length === 0) {
+        return res.status(404).send("Invoice not found");
+      }
 
-    const sale = rows[0];
-    const doc = new PDFDocument();
+      const sale = rows[0];
+      const doc = new PDFDocument();
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=invoice_${sale.invoiceNo}.pdf`
-    );
-
-    doc.pipe(res);
-
-    // Logo
-    try {
-      doc.image("public/Imges/INVENZA-.png", 30, 20, { width: 200 });
-    } catch (e) {
-      console.log("Logo not found, skipping...");
-    }
-
-    doc.moveDown(3);
-
-    // Header
-    doc.fontSize(20).text("Invoice", { align: "right" }).moveDown();
-    doc.fontSize(12).text(`Invoice No: ${sale.invoiceNo}`);
-    doc.text(`Date: ${new Date(sale.salesDate).toLocaleDateString()}`);
-    doc.text(`Customer: ${sale.customer_name} (${sale.company_name})`);
-    doc.text(`Email: ${sale.email}`);
-    doc.text(`Payment Mode: ${sale.paymentMode}`).moveDown();
-
-    // Table
-    doc.fontSize(12).text("Products:", { underline: true }).moveDown();
-    rows.forEach((item, idx) => {
-      doc.text(
-        `${idx + 1}. ${item.pname} - Qty: ${item.qty} x ₹${item.rate} = ₹${(
-          item.qty * item.rate
-        ).toFixed(2)}`
+      // set headers
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=invoice_${sale.invoiceNo}.pdf`
       );
+
+      doc.pipe(res);
+
+      // try logo
+      try {
+        doc.image("public/Imges/INVENZA-.png", 30, 20, { width: 200 });
+      } catch (e) {
+        console.log("Logo not found, skipping...");
+      }
+
+      doc.moveDown(3);
+
+      // header
+      doc.fontSize(20).text("Invoice", { align: "right" }).moveDown();
+      doc.fontSize(12).text(`Invoice No: ${sale.invoiceNo}`);
+      doc.text(`Date: ${new Date(sale.salesDate).toLocaleDateString()}`);
+      doc.text(`Customer: ${sale.customer_name} (${sale.company_name})`);
+      doc.text(`Email: ${sale.email}`);
+      doc.text(`Payment Mode: ${sale.paymentMode}`).moveDown();
+
+      // products list
+      doc.fontSize(12).text("Products:", { underline: true }).moveDown();
+     rows.forEach((item, idx) => {
+  const pname = item.product_name || "Unknown Product"; // fallback
+  const qty = Number(item.qty) || 0;
+  const rate = Number(item.rate) || 0;
+  const lineTotal = (qty * rate).toFixed(2);
+
+  doc.text(
+    `${idx + 1}. ${pname} - Qty: ${qty} x ₹${rate.toFixed(2)} = ₹${lineTotal}`
+  );
+});
+
+      // total
+      doc.moveDown()
+        .fontSize(14)
+        .text(`Total Amount: ₹${sale.totalAmount}`, { align: "right" });
+
+      doc.end();
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send("Error generating invoice");
     });
-
-    // Total
-    doc.moveDown()
-      .fontSize(14)
-      .text(`Total Amount: ₹${sale.totalAmount}`, { align: "right" });
-
-    doc.end();
-  });
 };

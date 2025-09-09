@@ -7,7 +7,7 @@ let sctrl=require("../controllers/supplierctrl.js");
 let cust_ctrl=require("../controllers/customerctrl.js");
 let purctrl=require("../controllers/purchasectrl.js");
 let salesctrl=require("../controllers/salesCtrl.js");
-
+let dash=require("../controllers/Dashboardctrl.js");
 let userctr=require("../controllers/userctrl.js");
 
 let router = express.Router();
@@ -76,11 +76,14 @@ router.get("/api/sales/download/:id", VerifyToken, authorizeRoles("admin","user"
 //usermange
 router.post("/api/users/add", VerifyToken, authorizeRoles("admin"), userctr.addUser);
 router.get("/api/users/view", VerifyToken, authorizeRoles("admin"), userctr.viewUsers);
-router.get("/api/users/:id", VerifyToken, authorizeRoles("admin"), userctr.getUserById);
+
 router.put("/api/users/update/:id", VerifyToken, authorizeRoles("admin"), userctr.updateUser);
 router.delete("/api/users/delete/:id", VerifyToken, authorizeRoles("admin"), userctr.deleteUser);
 router.get("/api/users/search/:keyword", VerifyToken, authorizeRoles("admin"), userctr.searchUsers);
 
+router.get("/api/dashboard/product",dash.getTotalProducts);
+router.get("/api/dashboard/category",dash.getCategoryWiseCount);
+router.get("/api/dashboard/salesperprod",dash.getSalesPerProduct);
 
 
 module.exports = router;

@@ -37,12 +37,12 @@ exports.RegisterApi=(req,res)=>
                 res.status(201).json({message:`User registered with username ${name}`});
             }).catch((err)=>
             {
-                res.send("error"+err);
+               res.status(500).json({ message: "Database error", error: err.message });
             });
         }
     }).catch((err)=>
     {
-        res.status(500).json({ message: "Database error"});
+      res.status(500).json({ message: "Database error", error: err.message });
     });
 }
 
@@ -81,6 +81,6 @@ exports.LoginPage=(req,res)=>
 
     }).catch((err)=>
     {
-        res.send(err);
+        res.status(500).json({ message: "Database error", error: err.message });
     });
 }

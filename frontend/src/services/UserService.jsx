@@ -16,10 +16,7 @@ class UserService {
     return axios.get(`${API_URL}/view`, this.getAuthHeaders());
   }
 
-  getUserById(id) {
-    return axios.get(`${API_URL}/${id}`, this.getAuthHeaders());
-  }
-
+  
   updateUser(id, userData) {
     return axios.put(`${API_URL}/update/${id}`, userData, this.getAuthHeaders());
   }

@@ -12,7 +12,7 @@ exports.saveProduct = (pname, price, cid, stock) => {
                 return reject(new Error("Product name already exists"));
             }
 
-            // 2️ Insert new product
+            //  Insert new product
             const insertSql = "INSERT INTO product(pname, price, cid, stock) VALUES (?, ?, ?, ?)";
             db.query(insertSql, [pname, price, cid, stock], (err2, result) => {
                 if (err2) reject(err2);
@@ -42,24 +42,7 @@ exports.viewProducts=()=>
     });
 }
 
-exports.getProdById=(id)=>
-{
-    return new Promise((resolve, reject)=>
-    {
-        db.query( "SELECT * FROM product WHERE pid = ? AND status = 'active'",[id],
-        (err,result)=>
-        {
-            if(err)
-            {
-                reject(err);
-            }
-            else
-            {
-                resolve(result);
-            }
-        });
-    });
-}
+
 
 exports.updateProdById=(id,pname,price,cid)=>{
     return new Promise((resolve,reject)=>{
@@ -82,7 +65,7 @@ exports.deleteProdById = (id) => {
       "DELETE FROM product WHERE pid = ?",
       [id],
       (err, result) => {
-        if (err) return reject(err);  // No foreign key conflict anymore
+        if (err) return reject(err); 
         resolve(result);
       }
     );

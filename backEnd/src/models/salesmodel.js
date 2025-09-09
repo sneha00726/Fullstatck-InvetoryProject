@@ -7,14 +7,14 @@ exports.createSale = (invoiceNo, salesDate, customerId, items, paymentMode, gstI
     let totalAmount = 0;
 
     // Validate products and calculate total
-    let fetchPricesPromises = items.map(item => {
+    let fetchPricesPromises = items.map(item => { //for a product it fetch name stock price 
       return new Promise((res, rej) => {
         db.query(`SELECT price, stock, pname FROM product WHERE pid=?`, [item.productId], (err, result) => {
           if (err) return rej(err);
           if (result.length === 0) return rej(new Error(`Product ${item.productId} not found`));
 
           const product = result[0];
-          if (product.stock < item.qty) return rej(new Error(`Out of stock for Product ID ${item.productId}`));
+          if (product.stock < item.qty) return rej(new Error(`Out of stock for Product ID ${item.productId}`)); //if the given item qty is less than stock 
 
           item.rate = product.price;          // snapshot of price
           item.product_name = product.pname;  // snapshot of name
@@ -129,19 +129,21 @@ exports.searchsales = (invoiceNo ) => {
 };
 
 
-exports.getInvoiceData = (saleId, callback) => {
-  const query = `
-    SELECT s.salesID,s.invoiceNo,s.salesDate,s.totalAmount,s.paymentMode,
-           c.name as customer_name,c.company_name,c.email,
-           p.pname, si.qty, si.rate
-    FROM sales s 
-    JOIN customer c ON s.customerId=c.id 
-    JOIN sales_items si ON s.salesID=si.salesID 
-    JOIN product p ON si.productId=p.pid
-    WHERE s.salesID=?`;
+exports.getInvoiceData = (saleId) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT s.salesID, s.invoiceNo, s.salesDate, s.totalAmount, s.paymentMode,
+             c.name AS customer_name, c.company_name, c.email,
+             si.product_name, si.qty, si.rate
+      FROM sales s
+      JOIN customer c ON s.customerId = c.id
+      LEFT JOIN sales_items si ON s.salesID = si.salesID
+      WHERE s.salesID = ?
+    `;
 
-  db.query(query, [saleId], (err, rows) => {
-    if (err) return callback(err, null);
-    callback(null, rows);
+    db.query(query, [saleId], (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
   });
 };
