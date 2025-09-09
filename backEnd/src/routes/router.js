@@ -7,20 +7,22 @@ let sctrl=require("../controllers/supplierctrl.js");
 let cust_ctrl=require("../controllers/customerctrl.js");
 let purctrl=require("../controllers/purchasectrl.js");
 let salesctrl=require("../controllers/salesCtrl.js");
-let dash=require("../controllers/Dashboardctrl.js");
+
+
+let dash=require("../controllers/dashboard.js");
+
 let userctr=require("../controllers/userctrl.js");
 
 let router = express.Router();
 
-
 let { VerifyToken } = require("../middleware/authmiddleware.js");  
 let authorizeRoles  = require("../middleware/authorized.js");
 
-// user api (public)
+//user api (public)
 router.get("/", ctrl.HomeLoginPage);
 router.post("/api/register", ctrl.RegisterApi);
 router.post("/api/login", ctrl.LoginPage);
-
+router.get("/dashboard",dash.dashboard);
 
 // category api 
 router.post("/api/categories/add", VerifyToken, authorizeRoles("admin"), cat_ctrl.createCategory);
@@ -29,7 +31,6 @@ router.get("/api/categories/:id", VerifyToken, authorizeRoles("admin"),  cat_ctr
 router.put("/api/categories/update/:id",  VerifyToken, authorizeRoles("admin"), cat_ctrl.UpdateCategory);
 router.delete("/api/categories/delete/:id", VerifyToken, authorizeRoles("admin"),cat_ctrl.DeleteCategory);
 router.get("/api/categories/search/:name", VerifyToken, authorizeRoles("admin","user"),cat_ctrl.searchCategory);
-
 
 
 //product
@@ -64,15 +65,15 @@ router.put("/api/purchases/update/:id", VerifyToken, authorizeRoles("admin"),pur
 router.delete("/api/purchases/delete/:id", VerifyToken, authorizeRoles("admin"),purctrl.deletePurchaseById);
 router.get("/api/purchases/search/:name", VerifyToken, authorizeRoles("admin"),purctrl.purchasesearch);
 
-//salesa
+//sales
+//sales
 router.post("/api/sales/add", VerifyToken, authorizeRoles("admin","user"),salesctrl.addSale);
 router.get("/api/sales/view",VerifyToken, authorizeRoles("admin","user"),salesctrl.ViewAllSales);
 router.get("/api/sales/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.GetbyIDSales);
 router.put("/api/sales/update/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.updateSalesById);
 router.delete("/api/sales/delete/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.deleteSalesById);
-router.get("/api/sales/search/:invoice", VerifyToken, authorizeRoles("admin","user"),salesctrl.salesSearch);
+router.get("/api/sales/search/:name", VerifyToken, authorizeRoles("admin","user"),salesctrl.salesSearch);
 
-router.get("/api/sales/download/:id", VerifyToken, authorizeRoles("admin","user"),salesctrl.downloadInvoice);
 //usermange
 router.post("/api/users/add", VerifyToken, authorizeRoles("admin"), userctr.addUser);
 router.get("/api/users/view", VerifyToken, authorizeRoles("admin"), userctr.viewUsers);
@@ -81,9 +82,8 @@ router.put("/api/users/update/:id", VerifyToken, authorizeRoles("admin"), userct
 router.delete("/api/users/delete/:id", VerifyToken, authorizeRoles("admin"), userctr.deleteUser);
 router.get("/api/users/search/:keyword", VerifyToken, authorizeRoles("admin"), userctr.searchUsers);
 
-router.get("/api/dashboard/product",dash.getTotalProducts);
-router.get("/api/dashboard/category",dash.getCategoryWiseCount);
-router.get("/api/dashboard/salesperprod",dash.getSalesPerProduct);
+
+
 
 
 module.exports = router;

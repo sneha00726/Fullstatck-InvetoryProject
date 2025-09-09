@@ -1,6 +1,12 @@
 let db = require("../../db.js");
+<<<<<<< HEAD
 
 let db = require("../../db.js");
+=======
+/*
+Add Purchase
+*/
+>>>>>>> b7e124a7d485976a150f6bef379c40f75a591d4e
 
 // Add a new purchase
 exports.addPurchase = ({ invoiceno, purchasedate, supplierid, paymentmode, gstinvoice, items }) => {
